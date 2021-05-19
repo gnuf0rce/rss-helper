@@ -7,6 +7,7 @@ import org.jsoup.Jsoup
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.*
+import kotlin.properties.ReadOnlyProperty
 
 internal suspend fun feed(url: Url): SyndFeed = useHttpClient { it.get(url) }
 
@@ -59,4 +60,7 @@ internal val SyndEntry.text get() = find(Plain)?.value
 /**
  * 查找第一个 [ContentType] 为 [Bittorrent] 的 [SyndEnclosure]，取 URL
  */
-internal val SyndEntry.torrent get() = enclosures.find { Bittorrent.match(it.contentType) }?.url?.substringBefore('&')
+internal val SyndEntry.torrent by ReadOnlyProperty { entry, _ ->
+    entry.enclosures.orEmpty().find { Bittorrent.match(it.contentType) }?.url
+        ?: entry.link?.takeIf { it.endsWith(".torrent") }
+}
