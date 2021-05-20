@@ -9,4 +9,5 @@ object Versions {
     const val junit = "5.6.2"
     const val rome = "1.15.0"
     const val jsoup = "1.13.1"
+    const val okhttp = "4.9.1"
 }

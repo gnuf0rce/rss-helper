@@ -35,6 +35,11 @@ kotlin {
 dependencies {
     implementation(ktor("client-serialization", Versions.ktor))
     implementation(ktor("client-encoding", Versions.ktor))
+    implementation(ktor("client-okhttp", Versions.ktor)) {
+        exclude(group = "com.squareup.okhttp3")
+    }
+    implementation(okhttp3("okhttp", Versions.okhttp))
+    implementation(okhttp3("okhttp-dnsoverhttps", Versions.okhttp))
     implementation(rome(Versions.rome))
     implementation(jsoup(Versions.jsoup))
     // test
