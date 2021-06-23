@@ -1,12 +1,8 @@
 package io.gnuf0rce.mirai.plugin
 
-import io.gnuf0rce.mirai.plugin.data.FeedRecordData
-import io.gnuf0rce.mirai.plugin.data.SubscribeRecord
-import io.gnuf0rce.mirai.plugin.data.SubscribeRecordData
+import com.rometools.rome.feed.synd.SyndEntry
+import io.gnuf0rce.mirai.plugin.data.*
 import io.gnuf0rce.rss.*
-import io.gnuf0rce.rss.feed
-import io.gnuf0rce.rss.orMinimum
-import io.gnuf0rce.rss.timestamp
 import io.ktor.http.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -17,20 +13,26 @@ import net.mamoe.mirai.console.util.ContactUtils.getContactOrNull
 import net.mamoe.mirai.console.util.CoroutineScopeUtils.childScope
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.FileSupported
-import net.mamoe.mirai.message.data.FileMessage
 import net.mamoe.mirai.message.data.Message
-import net.mamoe.mirai.utils.RemoteFile.Companion.sendFile
-import net.mamoe.mirai.utils.RemoteFile.Companion.uploadFile
-import java.io.File
+import net.mamoe.mirai.utils.*
 import java.time.OffsetDateTime
-import kotlin.time.minutes
+import kotlin.properties.ReadWriteProperty
+import kotlin.reflect.KProperty
 
 object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscriber") {
     private val histories by FeedRecordData::histories
     private val records by SubscribeRecordData::records
     private val mutex = Mutex()
 
-    private fun last(uri: String) = histories[uri]?.let(::timestamp).orMinimum()
+    private var SyndEntry.history by object : ReadWriteProperty<SyndEntry, OffsetDateTime?> {
+        override fun getValue(thisRef: SyndEntry, property: KProperty<*>): OffsetDateTime? {
+            return histories[thisRef.uri]?.let(::timestamp)
+        }
+
+        override fun setValue(thisRef: SyndEntry, property: KProperty<*>, value: OffsetDateTime?) {
+            histories[thisRef.uri] = value.orMinimum().toEpochSecond()
+        }
+    }
 
     private suspend fun SubscribeRecord.sendMessage(block: suspend (Contact) -> Message) {
         contacts.forEach { id ->
@@ -64,14 +66,15 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
     private fun task(link: Url) = launch(Dispatchers.IO) {
         while (isActive) {
             val record = mutex.withLock { records[link]?.takeIf { it.contacts.isNotEmpty() } } ?: return@launch
-            delay(record.interval.minutes)
+            delay(record.interval * 60 * 1000L)
             runCatching {
                 feed(link)
-            }.onSuccess { feed ->
-                feed.entries.filter { it.last.orMinimum() >= last(it.uri) }.forEach { entry ->
+            }.mapCatching { feed ->
+                feed.entries.filter { it.history == null || it.last.orMinimum() > it.history.orMinimum() }.forEach { entry ->
+                    logger.info { "${entry.uri}: ${entry.last.orMinimum()} ? ${entry.history}" }
                     record.sendFile { contact -> entry.toTorrent(contact) }
                     record.sendMessage { contact -> entry.toMessage(contact) }
-                    histories[entry.uri] = entry.published.orNow().toEpochSecond()
+                    entry.history = entry.last.orNow()
                 }
             }.onFailure {
                 logger.warning("Rss: $link", it)
@@ -83,8 +86,8 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
         val old = records[url] ?: SubscribeRecord()
         val new = if (old.contacts.isEmpty()) {
             val feed = feed(url)
-            val now = OffsetDateTime.now().toEpochSecond()
-            feed.entries.forEach { histories[it.uri] = now }
+            val now = OffsetDateTime.now()
+            feed.entries.forEach { it.history = now }
             task(url)
             SubscribeRecord(contacts = setOf(subject.id), name = feed.title)
         } else {

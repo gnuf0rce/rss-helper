@@ -33,7 +33,6 @@ kotlin {
 }
 
 dependencies {
-    implementation(ktor("client-serialization", Versions.ktor))
     implementation(ktor("client-encoding", Versions.ktor))
     implementation(ktor("client-okhttp", Versions.ktor)) {
         exclude(group = "com.squareup.okhttp3")

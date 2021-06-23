@@ -76,24 +76,7 @@ fun HttpClientConfig<*>.Rome(block: RomeFeature.Config.() -> Unit = {}) {
     install(RomeFeature, block)
 }
 
-typealias Ignore = (Throwable) -> Boolean
-
-private val ignore: Ignore = { throwable ->
-    throwable.printStackTrace()
-    when (throwable) {
-        is SSLException,
-        is EOFException,
-        is SocketException,
-        is SocketTimeoutException,
-        is HttpRequestTimeoutException,
-        is StreamResetException,
-        is NullPointerException,
-        is UnknownHostException,
-        is ConnectionShutdownException,
-        -> true
-        else -> false
-    }
-}
+private val Ignore: (Throwable) -> Boolean = { it is IOException || it is HttpRequestTimeoutException || it is FeedException }
 
 private val DefaultSyndFeedInput: SyndFeedInput = SyndFeedInput()
 
@@ -164,8 +147,8 @@ internal suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = wi
         }.onSuccess {
             return@withContext it
         }.onFailure { throwable ->
-            if (isActive && ignore(throwable)) {
-                //
+            if (isActive && Ignore(throwable)) {
+                // logger.warning(throwable::toString)
             } else {
                 throw throwable
             }

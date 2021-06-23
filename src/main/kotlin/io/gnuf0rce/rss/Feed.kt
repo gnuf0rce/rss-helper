@@ -11,15 +11,15 @@ import kotlin.properties.ReadOnlyProperty
 
 internal suspend fun feed(url: Url): SyndFeed = useHttpClient { it.get(url) }
 
-private val SystemZoneOffset by lazy { OffsetDateTime.now().offset }
+private val SystemZoneOffset by lazy { OffsetDateTime.now().offset!! }
 
 private fun Date.toOffsetDateTime() = toInstant().atOffset(SystemZoneOffset)
 
 internal fun timestamp(second: Long) = Instant.ofEpochSecond(second).atOffset(SystemZoneOffset)
 
-internal fun OffsetDateTime?.orMinimum() = this ?: OffsetDateTime.MIN
+internal fun OffsetDateTime?.orMinimum(): OffsetDateTime = this ?: OffsetDateTime.MIN
 
-internal fun OffsetDateTime?.orNow() = this ?: OffsetDateTime.now()
+internal fun OffsetDateTime?.orNow(): OffsetDateTime  = this ?: OffsetDateTime.now()
 
 internal val SyndEntry.published get() = publishedDate?.toOffsetDateTime()
 
