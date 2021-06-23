@@ -47,10 +47,24 @@ suspend fun SyndEntry.toMessage(subject: Contact, content: Boolean = true) = bui
     }
 }
 
+private val FULLWIDTH_CHARS = mapOf(
+    '\\' to '＼',
+    '/' to '／',
+    ':' to '：',
+    '*' to '＊',
+    '?' to '？',
+    '"' to '＂',
+    '<' to '＜',
+    '>' to '＞',
+    '|' to '｜'
+)
+
+private fun String.toFullWidth(): String = fold("") { acc, char -> acc + (FULLWIDTH_CHARS[char] ?: char) }
+
 suspend fun SyndEntry.toTorrent(subject: FileSupported): Message? {
     val url = Url(torrent ?: return null)
     return runCatching {
-        TorrentFolder.resolve("${uri}.torrent").apply {
+        TorrentFolder.resolve("${uri.toFullWidth()}.torrent").apply {
             if (exists().not()) {
                 parentFile.mkdirs()
                 writeBytes(useHttpClient { it.get(url) })
@@ -59,7 +73,7 @@ suspend fun SyndEntry.toTorrent(subject: FileSupported): Message? {
     }.onFailure {
         return@toTorrent "下载种子失败, ${it.message}".toPlainText()
     }.mapCatching { file ->
-        subject.uploadFile("${uri}.torrent", file)
+        subject.uploadFile("${uri.toFullWidth()}.torrent", file)
     }.onFailure {
         return@toTorrent "上传种子失败, ${it.message}".toPlainText()
     }.getOrNull()
