@@ -9,7 +9,7 @@ import java.time.OffsetDateTime
 import java.util.*
 import kotlin.properties.ReadOnlyProperty
 
-internal suspend fun feed(url: Url): SyndFeed = useHttpClient { it.get(url) }
+internal suspend fun feed(url: Url): SyndFeed = useHttpClient { it.get(url) { header(HttpHeaders.Host, url.host) } }
 
 private val SystemZoneOffset by lazy { OffsetDateTime.now().offset!! }
 
