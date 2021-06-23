@@ -9,7 +9,7 @@ import net.mamoe.mirai.message.data.toPlainText
 
 object RssGithubCommand : CompositeCommand(
     owner = RssHelperPlugin,
-    "github",
+    "rss-github",
     description = "Github Rss 订阅 系列 指令",
     overrideContext = RssCommandArgumentContext
 ) {
@@ -47,6 +47,7 @@ object RssGithubCommand : CompositeCommand(
             "Tags($owner/$repo)订阅任务[${name}]已添加".toPlainText()
         }
     }
+
     @SubCommand
     @Description("添加一个Commits订阅")
     suspend fun CommandSenderOnMessage<*>.activity(user: String) = sendMessage {
