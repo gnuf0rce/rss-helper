@@ -23,6 +23,7 @@ object RssHelperPlugin : KotlinPlugin(
         RssGithubCommand.register()
         RssMikanCommand.register()
         RssTestCommand.register()
+        RssMiraiCommand.register()
 
         RssSubscriber.start()
     }
@@ -32,6 +33,7 @@ object RssHelperPlugin : KotlinPlugin(
         RssGithubCommand.unregister()
         RssMikanCommand.unregister()
         RssTestCommand.unregister()
+        RssMiraiCommand.unregister()
 
         RssSubscriber.stop()
     }
