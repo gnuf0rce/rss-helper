@@ -4,8 +4,11 @@ import io.gnuf0rce.mirai.plugin.RssHelperPlugin
 import io.gnuf0rce.mirai.plugin.toMessage
 import io.gnuf0rce.rss.feed
 import io.ktor.http.*
+import kotlinx.coroutines.flow.collect
 import net.mamoe.mirai.console.command.CommandSenderOnMessage
 import net.mamoe.mirai.console.command.CompositeCommand
+import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.message.data.toPlainText
 
 object RssTestCommand: CompositeCommand(
     owner = RssHelperPlugin,
@@ -17,5 +20,16 @@ object RssTestCommand: CompositeCommand(
     @Description("测试一个订阅")
     suspend fun CommandSenderOnMessage<*>.build(url: Url) = sendMessage {
         feed(url).entries.first().toMessage(fromEvent.subject)
+    }
+
+    @SubCommand
+    @Description("清空种子文件")
+    suspend fun CommandSenderOnMessage<*>.clear(group: Group = fromEvent.subject as Group) = sendMessage {
+        group.filesRoot.listFiles().collect { file ->
+            if (file.getInfo()?.uploaderId  == bot?.id && file.name.endsWith(".torrent")) {
+                file.delete()
+            }
+        }
+        "${group}清空种子文件完毕".toPlainText()
     }
 }
