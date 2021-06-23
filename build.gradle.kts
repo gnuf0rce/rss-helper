@@ -7,6 +7,24 @@ plugins {
 group = "io.github.gnuf0rce"
 version = "1.0.0"
 
+mirai {
+    jvmTarget = JavaVersion.VERSION_11
+    configureShadow {
+        exclude {
+            it.path.startsWith("kotlin")
+        }
+        exclude {
+            it.path.startsWith("io/ktor") && it.path.startsWith("io/ktor/client/features/compression").not()
+        }
+        exclude {
+            it.path.startsWith("okhttp3/internal")
+        }
+        exclude {
+            it.path.startsWith("okio")
+        }
+    }
+}
+
 repositories {
     mavenLocal()
     maven(url = "https://maven.aliyun.com/repository/releases")
@@ -24,7 +42,6 @@ kotlin {
             languageSettings.useExperimentalAnnotation("kotlin.ExperimentalStdlibApi")
             languageSettings.useExperimentalAnnotation("io.ktor.util.KtorExperimentalAPI")
             languageSettings.useExperimentalAnnotation("net.mamoe.mirai.console.util.ConsoleExperimentalApi")
-            languageSettings.useExperimentalAnnotation("kotlin.time.ExperimentalTime")
         }
         test {
             languageSettings.useExperimentalAnnotation("net.mamoe.mirai.console.ConsoleFrontEndImplementation")
