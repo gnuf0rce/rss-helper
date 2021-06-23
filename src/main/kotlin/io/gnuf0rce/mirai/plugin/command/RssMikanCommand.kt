@@ -9,7 +9,7 @@ import net.mamoe.mirai.message.data.toPlainText
 
 object RssMikanCommand : CompositeCommand(
     owner = RssHelperPlugin,
-    "mikan",
+    "rss-mikan", "mikan",
     description = "Mikan Plans Rss 订阅、取消、详情等相关指令",
     overrideContext = RssCommandArgumentContext
 ) {
@@ -19,6 +19,8 @@ object RssMikanCommand : CompositeCommand(
     private val Classic = Url("https://mikanani.me/RSS/Classic")
 
     private val Bangumi = { id: Int, sub: Int? -> Url("https://mikanani.me/RSS/Bangumi?bangumiId=$id&subgroupid=$sub") }
+
+    private val Search = { word: String -> Url("https://mikanani.me/Home/Search?searchstr=$word") }
 
     @SubCommand
     @Description("添加一个MyBangumi订阅")
@@ -41,6 +43,14 @@ object RssMikanCommand : CompositeCommand(
     suspend fun CommandSenderOnMessage<*>.bangumi(id: Int, sub: Int? = null) = sendMessage {
         RssSubscriber.add(Bangumi(id, sub), fromEvent.subject).let { (name, _, _) ->
             "Bangumi($id by $sub)订阅任务[${name}]已添加".toPlainText()
+        }
+    }
+
+    @SubCommand
+    @Description("添加一个Search订阅")
+    suspend fun CommandSenderOnMessage<*>.search(word: String) = sendMessage {
+        RssSubscriber.add(Search(word), fromEvent.subject).let { (name, _, _) ->
+            "Search($word)订阅任务[${name}]已添加".toPlainText()
         }
     }
 }
