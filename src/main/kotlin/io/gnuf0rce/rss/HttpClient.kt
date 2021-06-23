@@ -1,18 +1,16 @@
 package io.gnuf0rce.rss
 
 import com.rometools.rome.feed.synd.SyndFeed
+import com.rometools.rome.io.FeedException
 import com.rometools.rome.io.SyndFeedInput
-import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
+import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.*
 import io.ktor.client.features.compression.*
-import io.ktor.client.statement.HttpResponseContainer
-import io.ktor.client.statement.HttpResponsePipeline
+import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.network.sockets.SocketTimeoutException
-import io.ktor.util.AttributeKey
-import io.ktor.utils.io.ByteReadChannel
+import io.ktor.util.*
+import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -21,16 +19,11 @@ import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
-import okhttp3.internal.http2.ConnectionShutdownException
-import okhttp3.internal.http2.StreamResetException
-import java.io.EOFException
+import okio.ByteString.Companion.toByteString
 import java.io.IOException
 import java.net.*
 import java.security.cert.X509Certificate
-import java.util.logging.Logger
 import javax.net.ssl.*
-
-private val logger = Logger.getAnonymousLogger()!!
 
 class RomeFeature internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
 
@@ -53,34 +46,25 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
 
         override fun install(feature: RomeFeature, scope: HttpClient) {
             scope.responsePipeline.intercept(HttpResponsePipeline.Parse) { (info, body) ->
-                if (body !is ByteReadChannel)
-                    return@intercept
+                if (body !is ByteReadChannel) return@intercept
 
-                if (!info.type.java.isAssignableFrom(SyndFeed::class.java))
-                    return@intercept
+                if (!info.type.java.isAssignableFrom(SyndFeed::class.java)) return@intercept
 
-                if (feature.accept.isNotEmpty() && feature.accept.all {
-                        context.response.contentType()?.match(it) != true
-                    })
-                    return@intercept
+                if (!feature.accept.any { context.response.contentType()?.match(it) == true }) return@intercept
 
-                val parsedBody =
-                    feature.parser().build(body.toInputStream().reader(context.response.charset() ?: Charsets.UTF_8))
-                proceedWith(HttpResponseContainer(info, parsedBody))
+                val reader = body.toInputStream().reader(context.response.charset() ?: Charsets.UTF_8)
+                val parsed = feature.parser().build(reader)
+                proceedWith(HttpResponseContainer(info, parsed))
             }
         }
     }
-}
-
-fun HttpClientConfig<*>.Rome(block: RomeFeature.Config.() -> Unit = {}) {
-    install(RomeFeature, block)
 }
 
 private val Ignore: (Throwable) -> Boolean = { it is IOException || it is HttpRequestTimeoutException || it is FeedException }
 
 private val DefaultSyndFeedInput: SyndFeedInput = SyndFeedInput()
 
-var DnsOverHttpsUrl = "https://1.0.0.1/dns-query"
+var DnsOverHttpsUrl = "https://public.dns.iij.jp/dns-query"
 
 private fun DnsOverHttps(url: String): DnsOverHttps {
     return DnsOverHttps.Builder().apply {
@@ -119,6 +103,8 @@ private object RssProxySelector : ProxySelector() {
     override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) = ProxyConnectFailed(uri, sa, ioe)
 }
 
+var ClientTimeout = 30 * 1000L
+
 private fun client() = HttpClient(OkHttp) {
     BrowserUserAgent()
     ContentEncoding {
@@ -126,15 +112,19 @@ private fun client() = HttpClient(OkHttp) {
         deflate()
         identity()
     }
-    Rome {
-        accept = mutableListOf()
+    install(HttpTimeout) {
+        requestTimeoutMillis = ClientTimeout
+        connectTimeoutMillis = ClientTimeout
+        socketTimeoutMillis = ClientTimeout
+    }
+    install(RomeFeature) {
         parser = { DefaultSyndFeedInput }
     }
     engine {
         config {
             sslSocketFactory(RubySSLSocketFactory, RubyX509TrustManager)
             hostnameVerifier { _, _ -> true }
-            proxySelector(RssProxySelector)
+            // proxySelector(RssProxySelector)
             dns(DnsOverHttps(DnsOverHttpsUrl))
         }
     }
@@ -157,14 +147,21 @@ internal suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = wi
     throw CancellationException()
 }
 
-var SNIServerNamePredicate: (SNIServerName) -> Boolean = { true }
+internal val HostNames = listOf("""sukebei\.nyaa\.(si|net)""".toRegex())
 
-object RubySSLSocketFactory : SSLSocketFactory() {
+var SNIServerNamePredicate: (SNIServerName) -> Boolean = { name ->
+    val host = name.encoded.toByteString().utf8()
+    // logger.info { host }
+    HostNames.none { it.matches(host) }
+}
+
+private object RubySSLSocketFactory : SSLSocketFactory() {
 
     private fun Socket.setServerNames(): Socket = when (this) {
         is SSLSocket -> apply {
+            // logger.info { inetAddress.hostAddress }
             sslParameters = sslParameters.apply {
-                cipherSuites = supportedCipherSuites
+                // cipherSuites = supportedCipherSuites
                 protocols = supportedProtocols
                 serverNames = serverNames.filter(SNIServerNamePredicate)
             }
@@ -194,7 +191,7 @@ object RubySSLSocketFactory : SSLSocketFactory() {
     override fun getSupportedCipherSuites(): Array<String> = emptyArray()
 }
 
-object RubyX509TrustManager : X509TrustManager {
+private object RubyX509TrustManager : X509TrustManager {
 
     override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
 
