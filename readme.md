@@ -41,7 +41,7 @@
 | `/<rss-mikan mikan> <bangumi> [id] [sub]?` | 添加一个Bangumi订阅   |
 | `/<rss-mikan mikan> <search> [word]`       | 添加一个Search订阅    |
 
-### RssMiraiCommand
+### RssTestCommand
 
 | 指令                        | 描述         |
 |:----------------------------|:-------------|
