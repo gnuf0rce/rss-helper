@@ -10,7 +10,6 @@ import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
 import net.mamoe.mirai.message.data.toPlainText
 import okio.ByteString.Companion.decodeBase64
-import kotlin.time.minutes
 
 val RssCommandArgumentContext = buildCommandArgumentContext {
     Url::class with { raw, _ ->
@@ -32,7 +31,7 @@ suspend fun <T : CommandSenderOnMessage<*>> T.sendMessage(block: suspend T.(Cont
     }.onFailure {
         when {
             SendLimit.containsMatchIn(it.message.orEmpty()) -> {
-                delay((1).minutes)
+                delay(60 * 1000L)
                 quoteReply(SendLimit.find(it.message!!)!!.value)
             }
             else -> {

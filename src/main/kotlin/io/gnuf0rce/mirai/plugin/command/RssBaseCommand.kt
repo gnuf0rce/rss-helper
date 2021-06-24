@@ -33,10 +33,10 @@ object RssBaseCommand : CompositeCommand(
     }
 
     @SubCommand
-    @Description("添加一个订阅")
+    @Description("设置订阅间隔")
     suspend fun CommandSenderOnMessage<*>.interval(url: Url, duration: Int) = sendMessage {
         RssSubscriber.interval(url, duration).let { (name, _, _) ->
-            "RSS订阅任务[${name}]设置订阅时间${duration}".toPlainText()
+            "RSS订阅任务[${name}]设置订阅间隔${duration}".toPlainText()
         }
     }
 
