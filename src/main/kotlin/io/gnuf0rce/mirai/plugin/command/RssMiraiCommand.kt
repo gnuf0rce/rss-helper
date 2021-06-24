@@ -16,7 +16,7 @@ object RssMiraiCommand : CompositeCommand(
     private val Category = { category: Int -> Url("https://mirai.mamoe.net/category/$category.rss") }
 
     @SubCommand
-    @Description("添加插件发布订阅")
+    @Description("添加标签订阅")
     suspend fun CommandSenderOnMessage<*>.category(value: Int) = sendMessage {
         RssSubscriber.add(Category(value), fromEvent.subject).let { (name, _, _) ->
             "MiraiForum订阅任务[${name}]已添加".toPlainText()
@@ -28,6 +28,6 @@ object RssMiraiCommand : CompositeCommand(
     suspend fun CommandSenderOnMessage<*>.plugin() = category(11)
 
     @SubCommand
-    @Description("添加其他项目发布发布订阅")
+    @Description("添加其他项目发布订阅")
     suspend fun CommandSenderOnMessage<*>.other() = category(15)
 }

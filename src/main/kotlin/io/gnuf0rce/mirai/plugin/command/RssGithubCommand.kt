@@ -41,7 +41,7 @@ object RssGithubCommand : CompositeCommand(
     }
 
     @SubCommand
-    @Description("添加一个Commits订阅")
+    @Description("添加一个Tags订阅")
     suspend fun CommandSenderOnMessage<*>.tags(owner: String, repo: String) = sendMessage {
         RssSubscriber.add(Tags(owner, repo), fromEvent.subject).let { (name, _, _) ->
             "Tags($owner/$repo)订阅任务[${name}]已添加".toPlainText()
@@ -49,7 +49,7 @@ object RssGithubCommand : CompositeCommand(
     }
 
     @SubCommand
-    @Description("添加一个Commits订阅")
+    @Description("添加一个Activity订阅")
     suspend fun CommandSenderOnMessage<*>.activity(user: String) = sendMessage {
         RssSubscriber.add(Activity(user), fromEvent.subject).let { (name, _, _) ->
             "Activity($user)订阅任务[${name}]已添加".toPlainText()
@@ -57,7 +57,7 @@ object RssGithubCommand : CompositeCommand(
     }
 
     @SubCommand
-    @Description("添加一个Commits订阅")
+    @Description("添加一个Private订阅")
     suspend fun CommandSenderOnMessage<*>.private(user: String, secret: String) = sendMessage {
         RssSubscriber.add(Private(user, secret), fromEvent.subject).let { (name, _, _) ->
             "Private($user)订阅任务[${name}]已添加".toPlainText()
