@@ -56,6 +56,14 @@
 | `/<rss-mirai mirai> <plugin>`           | 添加插件发布订阅     |
 | `/<rss-mirai mirai> <other>`            | 添加其他项目发布订阅 |
 
+### RssHubCommand
+
+| 指令                                    | 描述                 |
+|:----------------------------------------|:---------------------|
+| `/<rss-hub rsshub> <add>`               | 交互添加RssHub订阅   |
+
+配置文件 `RssHubConfig.yml` 可以配置rsshub的域名，即可以配置rsshub的源
+
 ## TODO
 
 - [ ] 翻译功能
