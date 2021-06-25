@@ -60,7 +60,21 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
     }
 }
 
-private val Ignore: (Throwable) -> Boolean = { it is IOException || it is HttpRequestTimeoutException || it is FeedException }
+private val Ignore: (Throwable) -> Boolean = {
+    when (it) {
+        is ResponseException -> {
+            false
+        }
+        is IOException,
+        is HttpRequestTimeoutException,
+        is FeedException -> {
+            true
+        }
+        else -> {
+            false
+        }
+    }
+}
 
 private val DefaultSyndFeedInput: SyndFeedInput = SyndFeedInput()
 
