@@ -29,23 +29,23 @@ internal val SyndEntry.last get() = updated ?: published
 
 internal val SyndFeed.published get() = publishedDate?.toOffsetDateTime() ?: entries.maxOfOrNull { it.last.orMinimum() }
 
-private fun parse(value: String): ContentType {
+private fun ContentType(value: String): ContentType {
     return runCatching { ContentType.parse(value) }.getOrElse { ContentType.parse("text/${value}") }
 }
 
-internal val SyndContent.contentType get() = parse(type)
+internal val SyndContent.contentType get() = ContentType(type)
 
-internal val SyndEnclosure.contentType get() = parse(type)
+internal val SyndEnclosure.contentType get() = ContentType(type)
 
-val Bittorrent = ContentType.parse("application/x-bittorrent")
+internal val Bittorrent = ContentType.parse("application/x-bittorrent")
 
-val Html by ContentType.Text::Html
+internal val Html by ContentType.Text::Html
 
-val Plain by ContentType.Text::Plain
+internal val Plain by ContentType.Text::Plain
 
 internal val SyndContent.text get() = if (Html.match(contentType)) Jsoup.parse(value).text() else value
 
-private fun SyndEntry.find(type: ContentType) = (contents + description).find { type.match(it.contentType) }
+internal fun SyndEntry.find(type: ContentType) = (contents + description).find { type.match(it.contentType) }
 
 /**
  * 查找第一个 [ContentType] 为 [Html] 的 [SyndContent]，转换为 [org.jsoup.nodes.Document]
@@ -61,6 +61,8 @@ internal val SyndEntry.text get() = find(Plain)?.value
  * 查找第一个 [ContentType] 为 [Bittorrent] 的 [SyndEnclosure]，取 URL
  */
 internal val SyndEntry.torrent by ReadOnlyProperty { entry, _ ->
-    entry.enclosures.orEmpty().find { Bittorrent.match(it.contentType) }?.url
-        ?: entry.link?.takeIf { it.endsWith(".torrent") }
+    val url = entry.enclosures.orEmpty().find { Bittorrent.match(it.contentType) }?.url?.let {
+        if (it.startsWith("magnet")) it.substringBefore("&") else it
+    }
+    url ?: entry.link?.takeIf { it.endsWith(".torrent") }
 }

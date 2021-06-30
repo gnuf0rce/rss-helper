@@ -10,6 +10,8 @@ fun DependencyHandler.mirai(module: String, version: String) = "net.mamoe:mirai-
 
 fun DependencyHandler.rome(version: String) = "com.rometools:rome:$version"
 
+fun DependencyHandler.rome(module: String, version: String) = "com.rometools:rome-${module}:$version"
+
 fun DependencyHandler.jsoup(version: String) = "org.jsoup:jsoup:$version"
 
 fun DependencyHandler.okhttp3(module: String, version: String) = "com.squareup.okhttp3:$module:$version"
