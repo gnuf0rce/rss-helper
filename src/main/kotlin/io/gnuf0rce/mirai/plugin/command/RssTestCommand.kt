@@ -1,7 +1,6 @@
 package io.gnuf0rce.mirai.plugin.command
 
-import io.gnuf0rce.mirai.plugin.RssHelperPlugin
-import io.gnuf0rce.mirai.plugin.toMessage
+import io.gnuf0rce.mirai.plugin.*
 import io.gnuf0rce.rss.feed
 import io.ktor.http.*
 import net.mamoe.mirai.console.command.CommandSenderOnMessage
@@ -18,7 +17,7 @@ object RssTestCommand: CompositeCommand(
     @SubCommand
     @Description("测试一个订阅")
     suspend fun CommandSenderOnMessage<*>.build(url: Url) = sendMessage {
-        feed(url).entries.first().toMessage(fromEvent.subject)
+        client.feed(url).entries.first().toMessage(fromEvent.subject)
     }
 
     @SubCommand

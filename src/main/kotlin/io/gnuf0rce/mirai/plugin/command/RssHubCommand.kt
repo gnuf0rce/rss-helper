@@ -1,10 +1,7 @@
 package io.gnuf0rce.mirai.plugin.command
 
-import io.gnuf0rce.mirai.plugin.RssHelperPlugin
-import io.gnuf0rce.mirai.plugin.RssSubscriber
-import io.gnuf0rce.mirai.plugin.data.RssHubConfig
-import io.gnuf0rce.mirai.plugin.data.RssHubRoutes
-import io.gnuf0rce.rss.useHttpClient
+import io.gnuf0rce.mirai.plugin.*
+import io.gnuf0rce.mirai.plugin.data.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.isActive
@@ -26,7 +23,7 @@ object RssHubCommand : CompositeCommand(
     private val domain by RssHubConfig::domain
 
     private suspend fun routes(): RssHubRoutes {
-        return Json.decodeFromString(useHttpClient { it.get("https://${domain}/api/routes") })
+        return Json.decodeFromString(client.useHttpClient { it.get("https://${domain}/api/routes") })
     }
 
     @SubCommand
