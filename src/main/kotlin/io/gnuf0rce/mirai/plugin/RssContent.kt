@@ -4,14 +4,17 @@ import com.rometools.rome.feed.synd.SyndEntry
 import io.gnuf0rce.rss.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.FileSupported
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.RemoteFile.Companion.uploadFile
-import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
+import org.jsoup.select.NodeTraversor
+import org.jsoup.select.NodeVisitor
 
 internal val logger by RssHelperPlugin::logger
 
@@ -34,7 +37,7 @@ fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
     }
 }
 
-suspend fun SyndEntry.toMessage(subject: Contact, content: Boolean = true) = buildMessageChain {
+fun SyndEntry.toMessage(subject: Contact? = null, content: Boolean = true) = buildMessageChain {
     appendKeyValue("标题", title)
     appendKeyValue("链接", link)
     appendKeyValue("发布时间", published)
@@ -79,60 +82,54 @@ suspend fun SyndEntry.toTorrent(subject: FileSupported): Message? {
     }.getOrNull()
 }
 
-suspend fun Element.toMessage(subject: Contact?): MessageChain = buildMessageChain {
-    if (this@toMessage is Document) {
-        append(body().toMessage(subject))
-        return@buildMessageChain
-    }
-    when (nodeName()) {
-        "br" -> {
-            appendLine("")
+internal fun Element.src() = attr("src")
+
+internal fun Element.href() = attr("href")
+
+internal fun Element.image(subject: Contact?): MessageContent = runBlocking {
+    if (subject == null) {
+        " [${src()}] ".toPlainText()
+    } else {
+        val url = Url(src())
+        runCatching {
+            ImageFolder.resolve(url.filename).apply {
+                if (exists().not()) {
+                    parentFile.mkdirs()
+                    writeBytes(useHttpClient { it.get(url) })
+                }
+            }
+        }.mapCatching { image ->
+            image.uploadAsImage(subject)
+        }.getOrElse {
+            " [${src()}] ".toPlainText()
         }
-        "img" -> {
-            if (subject != null) {
-                val url = Url(attr("src"))
-                runCatching {
-                    ImageFolder.resolve(url.filename).apply {
-                        if (exists().not()) {
-                            parentFile.mkdirs()
-                            writeBytes(useHttpClient { it.get(url) })
+    }
+}
+
+fun Element.toMessage(subject: Contact?): MessageChain = buildMessageChain {
+    NodeTraversor.traverse(object : NodeVisitor {
+        override fun head(node: Node, depth: Int) {
+            if (node is TextNode) {
+                append(node.wholeText)
+            }
+        }
+
+        override fun tail(node: Node, depth: Int) {
+            if (node is Element) {
+                when(node.nodeName()) {
+                    "img" -> {
+                        append(node.image(subject))
+                    }
+                    "a" -> {
+                        if (node.text() != node.href()) {
+                            append(" <${node.href()}> ")
                         }
                     }
-                }.onFailure {
-                    appendLine("[下载图片失败](${text()})")
-                }.mapCatching { image ->
-                    append(image.uploadAsImage(subject))
-                }.onFailure {
-                    appendLine("[上传图片失败](${text()})")
-                }
-            } else {
-                appendLine(attr("src"))
-            }
-        }
-        "a" -> {
-            append(attr("href").toPlainText())
-        }
-        "hr" -> {
-            appendLine("----------------")
-        }
-        "strong", "span", "h1", "h2", "h3", "h4", "h5", "b", "font" -> {
-            append(text().trim().toPlainText())
-        }
-        "code", "table", "ul" -> {
-            appendLine(text())
-        }
-        "body", "div", "p", "pre" -> {
-            childNodes().forEach { node ->
-                if (node is TextNode) {
-                    append(node.text().trim())
-                } else if (node is Element) {
-                    append(node.toMessage(subject))
+                    else -> {
+                        //
+                    }
                 }
             }
-            appendLine("")
         }
-        else -> {
-            appendLine(html())
-        }
-    }
+    }, this@toMessage)
 }

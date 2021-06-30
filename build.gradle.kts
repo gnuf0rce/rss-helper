@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.gnuf0rce"
-version = "1.0.0-dev-3"
+version = "1.0.0-dev-4"
 
 mirai {
     jvmTarget = JavaVersion.VERSION_11
@@ -57,6 +57,7 @@ dependencies {
     implementation(okhttp3("okhttp", Versions.okhttp))
     implementation(okhttp3("okhttp-dnsoverhttps", Versions.okhttp))
     implementation(rome(Versions.rome))
+    implementation(rome("modules", Versions.rome))
     implementation(jsoup(Versions.jsoup))
     // test
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter", version = Versions.junit)
