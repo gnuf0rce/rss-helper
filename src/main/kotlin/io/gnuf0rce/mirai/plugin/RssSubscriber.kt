@@ -68,7 +68,7 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
             val record = mutex.withLock { records[link]?.takeIf { it.contacts.isNotEmpty() } } ?: return@launch
             delay(record.interval * 60 * 1000L)
             runCatching {
-                feed(link)
+                client.feed(link)
             }.mapCatching { feed ->
                 feed.entries.filter { it.history == null || it.last.orMinimum() > it.history.orMinimum() }.forEach { entry ->
                     logger.info { "${entry.uri}: ${entry.last.orMinimum()} ? ${entry.history}" }
@@ -85,7 +85,7 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
     suspend fun add(url: Url, subject: Contact) = mutex.withLock {
         val old = records[url] ?: SubscribeRecord()
         val new = if (old.contacts.isEmpty()) {
-            val feed = feed(url)
+            val feed = client.feed(url)
             val now = OffsetDateTime.now()
             feed.entries.forEach { it.history = now }
             task(url)

@@ -94,6 +94,14 @@ RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 
 配置文件 `RssHubConfig.yml` 可以配置rsshub的域名，即可以配置rsshub的源
 
+## 配置
+
+### HttpClientConfig
+
+1. doh Dns Over Https Url
+1. sni 需要移除SNI HostName 的域名正则表达式列表，直接填域名也可以被识别
+1. proxy 代理列表 host: proxy, host=127.0.0.1时是全局代理
+
 ## TODO
 
 - [ ] 翻译功能
