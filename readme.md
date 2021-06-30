@@ -3,7 +3,8 @@
 > 基于 [Mirai Console](https://github.com/mamoe/mirai-console) 的RSS订阅插件
 
 [![Release](https://img.shields.io/github/v/release/gnuf0rce/rss-helper)](https://github.com/gnuf0rce/rss-helper/releases)
-[![Release](https://img.shields.io/github/downloads/gnuf0rce/rss-helper/total)](https://shields.io/category/downloads)
+[![Downloads](https://img.shields.io/github/downloads/gnuf0rce/rss-helper/total)](https://shields.io/category/downloads)
+[![MiraiForum](https://img.shields.io/badge/post-on%20MiraiForum-yellow)](https://mirai.mamoe.net/topic/334)
 
 ## 指令
 
@@ -58,9 +59,9 @@
 
 ### RssHubCommand
 
-| 指令                                    | 描述                 |
-|:----------------------------------------|:---------------------|
-| `/<rss-hub rsshub> <add>`               | 交互添加RssHub订阅   |
+| 指令                      | 描述               |
+|:--------------------------|:-------------------|
+| `/<rss-hub rsshub> <add>` | 交互添加RssHub订阅 |
 
 交互过程举例
 ```
@@ -98,5 +99,5 @@ RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 - [ ] 翻译功能
 - [ ] 代理支持
 - [x] Doh支持
-- [ ] 将Html转化为Mirai的MessageChain(主要目的是显示图片)
+- [x] 将Html转化为Mirai的MessageChain(主要目的是显示图片)
   
