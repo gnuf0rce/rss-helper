@@ -63,7 +63,7 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
         }
     }
 
-    private fun task(link: Url) = launch(Dispatchers.IO) {
+    private fun task(link: Url) = launch(SupervisorJob()) {
         while (isActive) {
             val record = mutex.withLock { records[link]?.takeIf { it.contacts.isNotEmpty() } } ?: return@launch
             delay(record.interval * 60 * 1000L)
