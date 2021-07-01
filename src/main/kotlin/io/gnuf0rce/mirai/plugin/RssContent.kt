@@ -21,6 +21,7 @@ import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
 import java.io.IOException
 import java.net.*
+import javax.net.ssl.SSLHandshakeException
 
 internal val logger by RssHelperPlugin::logger
 
@@ -34,6 +35,13 @@ internal val client: RssHttpClient by lazy {
             when (it) {
                 is ResponseException -> {
                     false
+                }
+                is UnknownHostException -> {
+                    true
+                }
+                is SSLHandshakeException -> {
+                    logger.warning { "RssHttpClient Ignore, 握手失败，可能需要添加SNI过滤 $it" }
+                    true
                 }
                 is IOException,
                 is HttpRequestTimeoutException -> {
