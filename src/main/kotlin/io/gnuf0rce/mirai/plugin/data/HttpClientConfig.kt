@@ -12,5 +12,8 @@ object HttpClientConfig: ReadOnlyPluginConfig("HttpClientConfig") {
     val sni: List<String> by value(listOf("""sukebei\.nyaa\.(si|net)"""))
 
     @ValueDescription("MAP(host, proxy), default by host=127.0.0.1")
-    val proxy: MutableMap<String, String> by value(mutableMapOf())
+    val proxy: MutableMap<String, String> by value(mutableMapOf(
+        "www.google.com" to "http://127.0.0.1:8080",
+        "twitter.com" to "socks://127.0.0.1:1080"
+    ))
 }
