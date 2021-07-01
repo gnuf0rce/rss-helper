@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.gnuf0rce"
-version = "1.0.0-dev-4"
+version = "1.0.0-dev-5"
 
 mirai {
     jvmTarget = JavaVersion.VERSION_11

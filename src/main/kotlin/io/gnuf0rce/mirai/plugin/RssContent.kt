@@ -1,7 +1,9 @@
 package io.gnuf0rce.mirai.plugin
 
 import com.rometools.rome.feed.synd.SyndEntry
+import io.gnuf0rce.mirai.plugin.data.*
 import io.gnuf0rce.rss.*
+import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -10,17 +12,75 @@ import net.mamoe.mirai.contact.FileSupported
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.RemoteFile.Companion.uploadFile
+import net.mamoe.mirai.utils.*
+import okhttp3.Dns
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
+import java.io.IOException
+import java.net.*
+import javax.net.ssl.SSLHandshakeException
 
 internal val logger by RssHelperPlugin::logger
 
 internal val ImageFolder get() = RssHelperPlugin.dataFolder.resolve("image")
 
 internal val TorrentFolder get() = RssHelperPlugin.dataFolder.resolve("torrent")
+
+internal val client: RssHttpClient by lazy {
+    object : RssHttpClient() {
+        override val ignore: (Throwable) -> Boolean = {
+            when (it) {
+                is ResponseException -> {
+                    false
+                }
+                is UnknownHostException -> {
+                    true
+                }
+                is SSLHandshakeException -> {
+                    logger.warning { "RssHttpClient Ignore, 握手失败，可能需要添加SNI过滤 $it" }
+                    true
+                }
+                is IOException,
+                is HttpRequestTimeoutException -> {
+                    logger.warning {
+                        "RssHttpClient Ignore $it"
+                    }
+                    true
+                }
+                else -> {
+                    false
+                }
+            }
+        }
+
+        override val dns: Dns by lazy {
+            DnsOverHttps(HttpClientConfig.doh)
+        }
+
+        override val sni: List<Regex> by lazy {
+            HttpClientConfig.sni.map { it.toRegex() }
+        }
+
+        override val proxySelector: ProxySelector = object : ProxySelector() {
+            override fun select(uri: URI?): MutableList<Proxy> {
+                return HttpClientConfig.proxy.filter { (host, _) ->
+                    host == uri?.host || host == "127.0.0.1"
+                }.map { (_, proxy) ->
+                    Url(proxy).toProxy()
+                }.toMutableList()
+            }
+
+            override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) {
+                logger.warning {
+                    "RssHttpClient proxy uri $ioe"
+                }
+            }
+        }
+    }
+}
 
 private val Url.filename get() = encodedPath.substringAfterLast('/')
 
@@ -37,7 +97,7 @@ fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
     }
 }
 
-fun SyndEntry.toMessage(subject: Contact? = null, content: Boolean = true) = buildMessageChain {
+fun SyndEntry.toMessage(subject: Contact? = null, limit: Int = RssContentConfig.limit) = buildMessageChain {
     appendKeyValue("标题", title)
     appendKeyValue("链接", link)
     appendKeyValue("发布时间", published)
@@ -45,8 +105,12 @@ fun SyndEntry.toMessage(subject: Contact? = null, content: Boolean = true) = bui
     appendKeyValue("分类", categories.map { it.name })
     appendKeyValue("作者", author)
     appendKeyValue("种子", torrent)
-    if (content) {
-        add(html?.toMessage(subject) ?: text.orEmpty().toPlainText())
+    (html?.toMessage(subject) ?: text.orEmpty().toPlainText()).let {
+        if (it.content.length <= limit) {
+            add(it)
+        } else {
+            appendLine("内容过长")
+        }
     }
 }
 
@@ -65,12 +129,13 @@ private val FULLWIDTH_CHARS = mapOf(
 private fun String.toFullWidth(): String = fold("") { acc, char -> acc + (FULLWIDTH_CHARS[char] ?: char) }
 
 suspend fun SyndEntry.toTorrent(subject: FileSupported): Message? {
-    val url = Url(torrent ?: return null)
+    // TODO magnet to file
+    val url = Url(torrent?.takeIf { it.startsWith("http") } ?: return null)
     return runCatching {
         TorrentFolder.resolve("${uri.toFullWidth()}.torrent").apply {
             if (exists().not()) {
                 parentFile.mkdirs()
-                writeBytes(useHttpClient { it.get(url) })
+                writeBytes(client.useHttpClient { it.get(url) })
             }
         }
     }.onFailure {
@@ -95,7 +160,7 @@ internal fun Element.image(subject: Contact?): MessageContent = runBlocking {
             ImageFolder.resolve(url.filename).apply {
                 if (exists().not()) {
                     parentFile.mkdirs()
-                    writeBytes(useHttpClient { it.get(url) })
+                    writeBytes(client.useHttpClient { it.get(url) })
                 }
             }
         }.mapCatching { image ->
@@ -116,7 +181,7 @@ fun Element.toMessage(subject: Contact?): MessageChain = buildMessageChain {
 
         override fun tail(node: Node, depth: Int) {
             if (node is Element) {
-                when(node.nodeName()) {
+                when (node.nodeName()) {
                     "img" -> {
                         append(node.image(subject))
                     }

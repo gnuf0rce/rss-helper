@@ -9,7 +9,11 @@ import java.time.OffsetDateTime
 import java.util.*
 import kotlin.properties.ReadOnlyProperty
 
-internal suspend fun feed(url: Url): SyndFeed = useHttpClient { it.get(url) { header(HttpHeaders.Host, url.host) } }
+internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { client ->
+    client.get(url) {
+        header(HttpHeaders.Host, url.host)
+    }
+}
 
 private val SystemZoneOffset by lazy { OffsetDateTime.now().offset!! }
 
@@ -19,7 +23,7 @@ internal fun timestamp(second: Long) = Instant.ofEpochSecond(second).atOffset(Sy
 
 internal fun OffsetDateTime?.orMinimum(): OffsetDateTime = this ?: OffsetDateTime.MIN
 
-internal fun OffsetDateTime?.orNow(): OffsetDateTime  = this ?: OffsetDateTime.now()
+internal fun OffsetDateTime?.orNow(): OffsetDateTime = this ?: OffsetDateTime.now()
 
 internal val SyndEntry.published get() = publishedDate?.toOffsetDateTime()
 
@@ -30,7 +34,11 @@ internal val SyndEntry.last get() = updated ?: published
 internal val SyndFeed.published get() = publishedDate?.toOffsetDateTime() ?: entries.maxOfOrNull { it.last.orMinimum() }
 
 private fun ContentType(value: String): ContentType {
-    return runCatching { ContentType.parse(value) }.getOrElse { ContentType.parse("text/${value}") }
+    return if ('/' in value) {
+        ContentType.parse(value)
+    } else {
+        ContentType.parse("text/${value}")
+    }
 }
 
 internal val SyndContent.contentType get() = ContentType(type)
