@@ -64,6 +64,7 @@
 | `/<rss-hub rsshub> <add>` | 交互添加RssHub订阅 |
 
 交互过程举例
+
 ```
 1748(1438159989)  23:29:58
 /rsshub add
@@ -101,6 +102,10 @@ RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 1. doh Dns Over Https Url
 1. sni 需要移除SNI HostName 的域名正则表达式列表，直接填域名也可以被识别
 1. proxy 代理列表 host: proxy, host=127.0.0.1时是全局代理
+
+### RssContentConfig
+
+1. limit 订阅内容输出到QQ消息的最大长度，超过则只会输出 `内容过长`
 
 ## TODO
 

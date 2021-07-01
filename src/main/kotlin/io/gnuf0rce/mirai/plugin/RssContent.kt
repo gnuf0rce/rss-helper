@@ -89,7 +89,7 @@ fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
     }
 }
 
-fun SyndEntry.toMessage(subject: Contact? = null, content: Boolean = true) = buildMessageChain {
+fun SyndEntry.toMessage(subject: Contact? = null, limit: Int = RssContentConfig.limit) = buildMessageChain {
     appendKeyValue("标题", title)
     appendKeyValue("链接", link)
     appendKeyValue("发布时间", published)
@@ -97,8 +97,12 @@ fun SyndEntry.toMessage(subject: Contact? = null, content: Boolean = true) = bui
     appendKeyValue("分类", categories.map { it.name })
     appendKeyValue("作者", author)
     appendKeyValue("种子", torrent)
-    if (content) {
-        add(html?.toMessage(subject) ?: text.orEmpty().toPlainText())
+    (html?.toMessage(subject) ?: text.orEmpty().toPlainText()).let {
+        if (it.content.length <= limit) {
+            add(it)
+        } else {
+            appendLine("内容过长")
+        }
     }
 }
 
