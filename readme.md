@@ -104,7 +104,7 @@ RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 
 ### HttpClientConfig
 
-1. doh Dns Over Https Url
+1. doh Dns Over Https Url (为空时关闭Doh，使用系统DNS since 1.0.0-dev-6)
 1. sni 需要移除 SNI HostName 的域名的正则表达式列表
 1. proxy 代理列表 host: proxy, host=127.0.0.1时是全局代理
 

@@ -57,7 +57,7 @@ internal val client: RssHttpClient by lazy {
         }
 
         override val dns: Dns by lazy {
-            DnsOverHttps(HttpClientConfig.doh)
+            if (HttpClientConfig.doh.isNotBlank()) DnsOverHttps(HttpClientConfig.doh) else Dns.SYSTEM
         }
 
         override val sni: List<Regex> by lazy {
