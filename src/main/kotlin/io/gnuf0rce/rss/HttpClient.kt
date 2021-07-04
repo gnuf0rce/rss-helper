@@ -126,8 +126,7 @@ open class RssHttpClient {
                 return@supervisorScope it
             }.onFailure { throwable ->
                 if (isActive && ignore(throwable)) {
-                    count++
-                    if (count > ignoreMax) {
+                    if (++count > ignoreMax) {
                         throw throwable
                     }
                 } else {
@@ -167,9 +166,8 @@ fun Url.toProxy(): Proxy {
 
 open class RubySSLSocketFactory(protected open val sni: List<Regex>) : SSLSocketFactory() {
 
-    private val predicate: (SNIServerName) -> Boolean = { name ->
-        val host = name.encoded.toByteString().utf8()
-        sni.none { it.matches(host) }
+    private val predicate: (SNIHostName) -> Boolean = { name ->
+        sni.none { it.matches(name.asciiName) }
     }
 
     private fun Socket.setServerNames(): Socket = when (this) {
@@ -177,8 +175,8 @@ open class RubySSLSocketFactory(protected open val sni: List<Regex>) : SSLSocket
             // logger.info { inetAddress.hostAddress }
             sslParameters = sslParameters.apply {
                 // cipherSuites = supportedCipherSuites
-                protocols = supportedProtocols
-                serverNames = serverNames.filter(predicate)
+                // protocols = supportedProtocols
+                serverNames = serverNames.filterIsInstance<SNIHostName>().filter(predicate)
             }
         }
         else -> this
