@@ -18,7 +18,6 @@ import okhttp3.Dns
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
-import okio.ByteString.Companion.toByteString
 import java.io.IOException
 import java.net.*
 import java.security.cert.X509Certificate
@@ -155,13 +154,7 @@ fun Url.toProxy(): Proxy {
         URLProtocol.HTTP -> Proxy.Type.HTTP
         else -> throw IllegalArgumentException("不支持的代理类型, $protocol")
     }
-    val socket = if (host.matches("""\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}""".toRegex())) {
-        val adder = host.split('.').map { it.toByte() }.toByteArray()
-        InetSocketAddress(InetAddress.getByAddress(adder), port)
-    } else {
-        InetSocketAddress(host, port)
-    }
-    return Proxy(type, socket)
+    return Proxy(type, InetSocketAddress(host, port))
 }
 
 open class RubySSLSocketFactory(protected open val sni: List<Regex>) : SSLSocketFactory() {
