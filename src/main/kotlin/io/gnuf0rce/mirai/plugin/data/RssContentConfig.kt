@@ -5,6 +5,6 @@ import net.mamoe.mirai.console.data.ValueDescription
 import net.mamoe.mirai.console.data.value
 
 object RssContentConfig: ReadOnlyPluginConfig("RssContentConfig") {
-    @ValueDescription("content")
+    @ValueDescription("Content limit length")
     val limit: Int by value(1024)
 }
