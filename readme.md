@@ -93,14 +93,19 @@ QQBot(3337342367)  23:30:26
 RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 ```
 
-配置文件 `RssHubConfig.yml` 可以配置rsshub的域名，即可以配置rsshub的源
+配置文件 `RssHubConfig.yml` 可以配置rsshub的域名，即可以配置rsshub的源  
+此配置只对新的rsshub订阅订阅行为有效
 
 ## 配置
 
+### RssHubConfig
+
+1. domain rsshub 服务器的域名，默认为官方的 rsshub.app
+
 ### HttpClientConfig
 
-1. doh Dns Over Https Url
-1. sni 需要移除SNI HostName 的域名正则表达式列表，直接填域名也可以被识别
+1. doh Dns Over Https Url (为空时关闭Doh，使用系统DNS since 1.0.0-dev-6)
+1. sni 需要移除 SNI HostName 的域名的正则表达式列表
 1. proxy 代理列表 host: proxy, host=127.0.0.1时是全局代理
 
 ### RssContentConfig
@@ -110,7 +115,7 @@ RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 ## TODO
 
 - [ ] 翻译功能
-- [ ] 代理支持
+- [x] 代理支持
 - [x] Doh支持
 - [x] 将Html转化为Mirai的MessageChain(主要目的是显示图片)
   

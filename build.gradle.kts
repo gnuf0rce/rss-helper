@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.gnuf0rce"
-version = "1.0.0-dev-5"
+version = "1.0.0-dev-6"
 
 mirai {
     jvmTarget = JavaVersion.VERSION_11
@@ -13,21 +13,11 @@ mirai {
         exclude {
             it.path.startsWith("kotlin")
         }
-        exclude {
-            it.path.startsWith("io/ktor") && it.path.startsWith("io/ktor/client/features/compression").not()
-        }
-        exclude {
-            it.path.startsWith("okhttp3/internal")
-        }
-        exclude {
-            it.path.startsWith("okio")
-        }
     }
 }
 
 repositories {
     mavenLocal()
-    maven(url = "https://maven.aliyun.com/repository/releases")
     maven(url = "https://maven.aliyun.com/repository/public")
     mavenCentral()
     jcenter()
@@ -50,14 +40,15 @@ kotlin {
 }
 
 dependencies {
-    implementation(ktor("client-encoding", Versions.ktor))
-    implementation(ktor("client-okhttp", Versions.ktor)) {
+    implementation(ktor("client-encoding", Versions.ktor)) {
+        exclude(group = "io.ktor", module = "client-core")
+    }
+    // compileOnly(okhttp3("okhttp", Versions.okhttp))
+    implementation(okhttp3("okhttp-dnsoverhttps", Versions.okhttp)) {
         exclude(group = "com.squareup.okhttp3")
     }
-    implementation(okhttp3("okhttp", Versions.okhttp))
-    implementation(okhttp3("okhttp-dnsoverhttps", Versions.okhttp))
     implementation(rome(Versions.rome))
-    implementation(rome("modules", Versions.rome))
+    // implementation(rome("modules", Versions.rome))
     implementation(jsoup(Versions.jsoup))
     // test
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter", version = Versions.junit)

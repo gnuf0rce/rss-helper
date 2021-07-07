@@ -11,6 +11,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
+import io.ktor.utils.io.core.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
@@ -18,11 +19,11 @@ import okhttp3.Dns
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
-import okio.ByteString.Companion.toByteString
 import java.io.IOException
 import java.net.*
 import java.security.cert.X509Certificate
 import javax.net.ssl.*
+import kotlin.coroutines.CoroutineContext
 
 class RomeFeature internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
 
@@ -59,7 +60,7 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
     }
 }
 
-open class RssHttpClient {
+open class RssHttpClient : CoroutineScope, Closeable {
     protected open val ignore: (Throwable) -> Boolean = {
         when (it) {
             is ResponseException -> {
@@ -90,7 +91,7 @@ open class RssHttpClient {
         override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) {}
     }
 
-    protected open fun client() = HttpClient(OkHttp) {
+    protected open val client = HttpClient(OkHttp) {
         BrowserUserAgent()
         ContentEncoding {
             gzip()
@@ -115,19 +116,22 @@ open class RssHttpClient {
         }
     }
 
+    override val coroutineContext: CoroutineContext get() = client.coroutineContext
+
+    override fun close() = client.close()
+
     protected open val ignoreMax = 20
 
     suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = supervisorScope {
         var count = 0
         while (isActive) {
             runCatching {
-                client().use { block(it) }
+                block(client)
             }.onSuccess {
                 return@supervisorScope it
             }.onFailure { throwable ->
                 if (isActive && ignore(throwable)) {
-                    count++
-                    if (count > ignoreMax) {
+                    if (++count > ignoreMax) {
                         throw throwable
                     }
                 } else {
@@ -139,9 +143,14 @@ open class RssHttpClient {
     }
 }
 
-fun DnsOverHttps(url: String): DnsOverHttps {
+fun DnsOverHttps(url: String, sni: Boolean = true): DnsOverHttps {
     return DnsOverHttps.Builder().apply {
-        client(OkHttpClient())
+        client(OkHttpClient.Builder().apply {
+            if (sni) {
+                sslSocketFactory(RubySSLSocketFactory(listOf(url.toHttpUrl().host.toRegex())), RubyX509TrustManager)
+                hostnameVerifier { _, _ -> true }
+            }
+        }.build())
         includeIPv6(false)
         url(url.toHttpUrl())
         post(true)
@@ -156,20 +165,13 @@ fun Url.toProxy(): Proxy {
         URLProtocol.HTTP -> Proxy.Type.HTTP
         else -> throw IllegalArgumentException("不支持的代理类型, $protocol")
     }
-    val socket = if (host.matches("""\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}""".toRegex())) {
-        val adder = host.split('.').map { it.toByte() }.toByteArray()
-        InetSocketAddress(InetAddress.getByAddress(adder), port)
-    } else {
-        InetSocketAddress(host, port)
-    }
-    return Proxy(type, socket)
+    return Proxy(type, InetSocketAddress(host, port))
 }
 
 open class RubySSLSocketFactory(protected open val sni: List<Regex>) : SSLSocketFactory() {
 
-    private val predicate: (SNIServerName) -> Boolean = { name ->
-        val host = name.encoded.toByteString().utf8()
-        sni.none { it.matches(host) }
+    private val predicate: (SNIHostName) -> Boolean = { name ->
+        sni.none { it.matches(name.asciiName) }
     }
 
     private fun Socket.setServerNames(): Socket = when (this) {
@@ -177,8 +179,8 @@ open class RubySSLSocketFactory(protected open val sni: List<Regex>) : SSLSocket
             // logger.info { inetAddress.hostAddress }
             sslParameters = sslParameters.apply {
                 // cipherSuites = supportedCipherSuites
-                protocols = supportedProtocols
-                serverNames = serverNames.filter(predicate)
+                // protocols = supportedProtocols
+                serverNames = serverNames.filterIsInstance<SNIHostName>().filter(predicate)
             }
         }
         else -> this
