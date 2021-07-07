@@ -11,6 +11,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
+import io.ktor.utils.io.core.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
@@ -22,6 +23,7 @@ import java.io.IOException
 import java.net.*
 import java.security.cert.X509Certificate
 import javax.net.ssl.*
+import kotlin.coroutines.CoroutineContext
 
 class RomeFeature internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
 
@@ -58,7 +60,7 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
     }
 }
 
-open class RssHttpClient {
+open class RssHttpClient : CoroutineScope, Closeable {
     protected open val ignore: (Throwable) -> Boolean = {
         when (it) {
             is ResponseException -> {
@@ -89,7 +91,7 @@ open class RssHttpClient {
         override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) {}
     }
 
-    protected open fun client() = HttpClient(OkHttp) {
+    protected open val client = HttpClient(OkHttp) {
         BrowserUserAgent()
         ContentEncoding {
             gzip()
@@ -114,13 +116,17 @@ open class RssHttpClient {
         }
     }
 
+    override val coroutineContext: CoroutineContext get() = client.coroutineContext
+
+    override fun close() = client.close()
+
     protected open val ignoreMax = 20
 
     suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = supervisorScope {
         var count = 0
         while (isActive) {
             runCatching {
-                client().use { block(it) }
+                block(client)
             }.onSuccess {
                 return@supervisorScope it
             }.onFailure { throwable ->
