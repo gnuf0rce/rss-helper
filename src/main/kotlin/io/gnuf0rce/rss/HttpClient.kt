@@ -19,6 +19,7 @@ import okhttp3.Dns
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
+import okhttp3.internal.canParseAsIpAddress
 import java.io.IOException
 import java.net.*
 import java.security.cert.X509Certificate
@@ -60,7 +61,32 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
     }
 }
 
-open class RssHttpClient : CoroutineScope, Closeable {
+const val DefaultDnsOverHttps = "https://public.dns.iij.jp/dns-query"
+
+val DefaultCNAME = mapOf(
+    "twimg.com".toRegex() to listOf("twimg.twitter.map.fastly.net", "pbs.twimg.com.akamaized.net"),
+    "github.com".toRegex() to listOf("13.229.188.59")
+)
+
+val DefaultProxy = mapOf(
+    "www.google.com" to "http://127.0.0.1:8080",
+    "twitter.com" to "socks://127.0.0.1:1080"
+)
+
+val DefaultSNIHosts: Set<String> = setOf("""sukebei\.nyaa\.(si|net)""")
+
+interface RssHttpClientConfig {
+
+    val doh get() = DefaultDnsOverHttps
+
+    val cname get() = DefaultCNAME
+
+    val proxy get() = DefaultProxy
+
+    val sni: Set<String> get() = DefaultSNIHosts
+}
+
+open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
     protected open val ignore: (Throwable) -> Boolean = {
         when (it) {
             is ResponseException -> {
@@ -81,16 +107,6 @@ open class RssHttpClient : CoroutineScope, Closeable {
 
     protected open val parser: () -> SyndFeedInput = ::SyndFeedInput
 
-    protected open val dns: Dns = DnsOverHttps("https://public.dns.iij.jp/dns-query")
-
-    protected open val sni: List<Regex> = listOf("""sukebei\.nyaa\.(si|net)""".toRegex())
-
-    protected open val proxySelector: ProxySelector = object : ProxySelector() {
-        override fun select(uri: URI?): MutableList<Proxy> = mutableListOf()
-
-        override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) {}
-    }
-
     protected open val client = HttpClient(OkHttp) {
         BrowserUserAgent()
         ContentEncoding {
@@ -110,8 +126,8 @@ open class RssHttpClient : CoroutineScope, Closeable {
             config {
                 sslSocketFactory(RubySSLSocketFactory(sni), RubyX509TrustManager)
                 hostnameVerifier { _, _ -> true }
-                proxySelector(proxySelector)
-                dns(dns)
+                proxySelector(ProxySelector(this@RssHttpClient.proxy))
+                dns(Dns(doh, cname))
             }
         }
     }
@@ -143,6 +159,46 @@ open class RssHttpClient : CoroutineScope, Closeable {
     }
 }
 
+fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySelector() {
+    override fun select(uri: URI?): MutableList<Proxy> {
+        return proxy.mapNotNull { (host, url) ->
+            if (uri?.host.orEmpty() == host || host == "127.0.0.1") {
+                Url(url).toProxy()
+            } else {
+                null
+            }
+        }.toMutableList()
+    }
+
+    override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) = Unit
+}
+
+fun Dns(doh: String, cname: Map<Regex, List<String>>): Dns {
+    val dns = (if (doh.isNotBlank()) DnsOverHttps(doh) else Dns.SYSTEM)
+
+    return object : Dns {
+        override fun lookup(hostname: String): List<InetAddress> {
+            if (hostname.canParseAsIpAddress()) return InetAddress.getAllByName(hostname).asList()
+            val result = mutableListOf<InetAddress>()
+            val other = cname.flatMap { (regex, list) -> if (regex in hostname) list else emptyList() }
+
+            other.forEach {
+                runCatching {
+                    result.addAll(dns.lookup(it))
+                }
+            }
+
+            runCatching {
+                result.addAll(dns.lookup(hostname))
+            }
+
+            return result.apply {
+                if (isEmpty()) throw UnknownHostException("$hostname and CNAME${other} ")
+            }
+        }
+    }
+}
+
 fun DnsOverHttps(url: String, sni: Boolean = true): DnsOverHttps {
     return DnsOverHttps.Builder().apply {
         client(OkHttpClient.Builder().apply {
@@ -168,10 +224,11 @@ fun Url.toProxy(): Proxy {
     return Proxy(type, InetSocketAddress(host, port))
 }
 
-open class RubySSLSocketFactory(protected open val sni: List<Regex>) : SSLSocketFactory() {
+class RubySSLSocketFactory(private val regexes: List<Regex>) : SSLSocketFactory() {
+    constructor(sni: Set<String>): this(regexes = sni.map { it.toRegex() })
 
     private val predicate: (SNIHostName) -> Boolean = { name ->
-        sni.none { it.matches(name.asciiName) }
+        regexes.none { it.matches(name.asciiName) }
     }
 
     private fun Socket.setServerNames(): Socket = when (this) {

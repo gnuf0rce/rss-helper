@@ -13,7 +13,6 @@ import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.RemoteFile.Companion.uploadFile
 import net.mamoe.mirai.utils.*
-import okhttp3.Dns
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
@@ -30,7 +29,7 @@ internal val ImageFolder get() = RssHelperPlugin.dataFolder.resolve("image")
 internal val TorrentFolder get() = RssHelperPlugin.dataFolder.resolve("torrent")
 
 internal val client: RssHttpClient by lazy {
-    object : RssHttpClient() {
+    object : RssHttpClient(), RssHttpClientConfig by HttpClientConfig {
         override val ignore: (Throwable) -> Boolean = {
             when (it) {
                 is ResponseException -> {
@@ -52,30 +51,6 @@ internal val client: RssHttpClient by lazy {
                 }
                 else -> {
                     false
-                }
-            }
-        }
-
-        override val dns: Dns by lazy {
-            if (HttpClientConfig.doh.isNotBlank()) DnsOverHttps(HttpClientConfig.doh) else Dns.SYSTEM
-        }
-
-        override val sni: List<Regex> by lazy {
-            HttpClientConfig.sni.map { it.toRegex() }
-        }
-
-        override val proxySelector: ProxySelector = object : ProxySelector() {
-            override fun select(uri: URI?): MutableList<Proxy> {
-                return HttpClientConfig.proxy.filter { (host, _) ->
-                    host == uri?.host || host == "127.0.0.1"
-                }.map { (_, proxy) ->
-                    Url(proxy).toProxy()
-                }.toMutableList()
-            }
-
-            override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) {
-                logger.warning {
-                    "RssHttpClient proxy uri $ioe"
                 }
             }
         }
