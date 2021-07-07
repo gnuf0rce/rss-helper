@@ -137,9 +137,14 @@ open class RssHttpClient {
     }
 }
 
-fun DnsOverHttps(url: String): DnsOverHttps {
+fun DnsOverHttps(url: String, sni: Boolean = true): DnsOverHttps {
     return DnsOverHttps.Builder().apply {
-        client(OkHttpClient())
+        client(OkHttpClient.Builder().apply {
+            if (sni) {
+                sslSocketFactory(RubySSLSocketFactory(listOf(url.toHttpUrl().host.toRegex())), RubyX509TrustManager)
+                hostnameVerifier { _, _ -> true }
+            }
+        }.build())
         includeIPv6(false)
         url(url.toHttpUrl())
         post(true)
