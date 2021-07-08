@@ -178,18 +178,21 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>): Dns {
 
     return object : Dns {
         override fun lookup(hostname: String): List<InetAddress> {
+            val lookup: (String) -> List<InetAddress> = {
+                if (hostname.canParseAsIpAddress()) InetAddress.getAllByName(it).asList() else dns.lookup(it)
+            }
             if (hostname.canParseAsIpAddress()) return InetAddress.getAllByName(hostname).asList()
             val result = mutableListOf<InetAddress>()
             val other = cname.flatMap { (regex, list) -> if (regex in hostname) list else emptyList() }
 
             other.forEach {
                 runCatching {
-                    result.addAll(dns.lookup(it))
+                    result.addAll(lookup(it))
                 }
             }
 
             runCatching {
-                result.addAll(dns.lookup(hostname))
+                result.addAll(lookup(hostname))
             }
 
             return result.apply {
@@ -225,7 +228,7 @@ fun Url.toProxy(): Proxy {
 }
 
 class RubySSLSocketFactory(private val regexes: List<Regex>) : SSLSocketFactory() {
-    constructor(sni: Set<String>): this(regexes = sni.map { it.toRegex() })
+    constructor(sni: Set<String>) : this(regexes = sni.map { it.toRegex() })
 
     private val predicate: (SNIHostName) -> Boolean = { name ->
         regexes.none { it.matches(name.asciiName) }
