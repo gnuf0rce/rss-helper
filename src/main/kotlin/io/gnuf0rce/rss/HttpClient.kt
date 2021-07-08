@@ -181,7 +181,6 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>): Dns {
             val lookup: (String) -> List<InetAddress> = {
                 if (hostname.canParseAsIpAddress()) InetAddress.getAllByName(it).asList() else dns.lookup(it)
             }
-            if (hostname.canParseAsIpAddress()) return InetAddress.getAllByName(hostname).asList()
             val result = mutableListOf<InetAddress>()
             val other = cname.flatMap { (regex, list) -> if (regex in hostname) list else emptyList() }
 
@@ -193,6 +192,10 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>): Dns {
 
             runCatching {
                 result.addAll(lookup(hostname))
+            }
+
+            if (result.isEmpty()) runCatching {
+                result.addAll(InetAddress.getAllByName(hostname))
             }
 
             return result.apply {
