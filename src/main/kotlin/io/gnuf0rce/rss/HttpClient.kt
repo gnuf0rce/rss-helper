@@ -230,17 +230,16 @@ fun Url.toProxy(): Proxy {
 class RubySSLSocketFactory(private val regexes: List<Regex>) : SSLSocketFactory() {
     constructor(sni: Set<String>) : this(regexes = sni.map { it.toRegex() })
 
-    private val predicate: (SNIHostName) -> Boolean = { name ->
-        regexes.none { it.matches(name.asciiName) }
-    }
-
     private fun Socket.setServerNames(): Socket = when (this) {
         is SSLSocket -> apply {
             // logger.info { inetAddress.hostAddress }
             sslParameters = sslParameters.apply {
                 // cipherSuites = supportedCipherSuites
                 // protocols = supportedProtocols
-                serverNames = serverNames.filterIsInstance<SNIHostName>().filter(predicate)
+                serverNames = serverNames.orEmpty().filter { name ->
+                    if (name !is SNIHostName) return@filter true
+                    regexes.none { it.matches(name.asciiName) }
+                }
             }
         }
         else -> this
