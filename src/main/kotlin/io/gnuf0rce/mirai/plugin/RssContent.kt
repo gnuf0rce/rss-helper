@@ -1,6 +1,7 @@
 package io.gnuf0rce.mirai.plugin
 
 import com.rometools.rome.feed.synd.SyndEntry
+import com.rometools.rome.io.ParsingFeedException
 import io.gnuf0rce.mirai.plugin.data.*
 import io.gnuf0rce.rss.*
 import io.ktor.client.features.*
@@ -19,8 +20,6 @@ import org.jsoup.nodes.TextNode
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
 import java.io.IOException
-import java.net.*
-import javax.net.ssl.SSLHandshakeException
 
 internal val logger by RssHelperPlugin::logger
 
@@ -32,20 +31,19 @@ internal val client: RssHttpClient by lazy {
     object : RssHttpClient(), RssHttpClientConfig by HttpClientConfig {
         override val ignore: (Throwable) -> Boolean = {
             when (it) {
-                is ResponseException -> {
-                    false
-                }
-                is UnknownHostException -> {
-                    true
-                }
-                is SSLHandshakeException -> {
-                    logger.warning { "RssHttpClient Ignore, 握手失败，可能需要添加SNI过滤 $it" }
-                    true
-                }
                 is IOException,
                 is HttpRequestTimeoutException -> {
-                    logger.warning {
-                        "RssHttpClient Ignore $it"
+                    val message = it.message.orEmpty()
+                    when {
+                        "Connection reset" in message -> {
+                            logger.warning { "RssHttpClient Ignore 链接被重置，可能需要添加SNI过滤 $it" }
+                        }
+                        it is ParsingFeedException -> {
+                            logger.warning { "RssHttpClient Ignore XML解析失败 $it" }
+                        }
+                        else -> {
+                            logger.warning { "RssHttpClient Ignore $it" }
+                        }
                     }
                     true
                 }
