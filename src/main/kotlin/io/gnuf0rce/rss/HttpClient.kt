@@ -241,7 +241,7 @@ class RubySSLSocketFactory(private val regexes: List<Regex>) : SSLSocketFactory(
                 // protocols = supportedProtocols
                 serverNames = serverNames.orEmpty().filter { name ->
                     if (name !is SNIHostName) return@filter true
-                    regexes.none { it.matches(name.asciiName) }
+                    regexes.none { it in name.asciiName }
                 }
             }
         }
