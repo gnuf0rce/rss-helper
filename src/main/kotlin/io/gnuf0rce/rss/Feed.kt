@@ -7,12 +7,21 @@ import org.jsoup.Jsoup
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.*
+import javax.net.ssl.SSLException
 import kotlin.properties.ReadOnlyProperty
 
 internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { client ->
-    client.get(url) {
-        header(HttpHeaders.Host, url.host)
-    }
+    runCatching{
+        client.get<SyndFeed>(url) {
+            header(HttpHeaders.Host, url.host)
+        }
+    }.recoverCatching {
+        if (it is SSLException) {
+            throw SSLException("Host: ${url.host}, ${it.message}", it)
+        } else {
+            throw it
+        }
+    }.getOrThrow()
 }
 
 private val SystemZoneOffset by lazy { OffsetDateTime.now().offset!! }
