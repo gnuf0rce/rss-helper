@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.gnuf0rce"
-version = "1.0.0-dev-6"
+version = "1.0.1"
 
 mirai {
     jvmTarget = JavaVersion.VERSION_11
@@ -41,7 +41,7 @@ kotlin {
 
 dependencies {
     implementation(ktor("client-encoding", Versions.ktor)) {
-        exclude(group = "io.ktor", module = "client-core")
+        exclude(group = "io.ktor", module = "ktor-client-core")
     }
     // compileOnly(okhttp3("okhttp", Versions.okhttp))
     implementation(okhttp3("okhttp-dnsoverhttps", Versions.okhttp)) {
