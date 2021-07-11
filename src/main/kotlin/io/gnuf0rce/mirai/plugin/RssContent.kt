@@ -74,7 +74,7 @@ fun SyndEntry.toMessage(subject: Contact? = null, limit: Int = RssContentConfig.
     appendKeyValue("标题", title)
     appendKeyValue("链接", link)
     appendKeyValue("发布时间", published)
-    appendKeyValue("更新时间", updated)
+    appendKeyValue("更新时间", updated.takeIf { it != published })
     appendKeyValue("分类", categories.map { it.name })
     appendKeyValue("作者", author)
     appendKeyValue("种子", torrent)
