@@ -1,19 +1,24 @@
 package io.gnuf0rce.mirai.plugin.data
 
+import io.gnuf0rce.rss.*
+import net.mamoe.mirai.console.data.PluginDataExtensions.mapKeys
 import net.mamoe.mirai.console.data.ReadOnlyPluginConfig
 import net.mamoe.mirai.console.data.ValueDescription
+import net.mamoe.mirai.console.data.ValueName
 import net.mamoe.mirai.console.data.value
 
-object HttpClientConfig: ReadOnlyPluginConfig("HttpClientConfig") {
+object HttpClientConfig : ReadOnlyPluginConfig("HttpClientConfig"), RssHttpClientConfig {
     @ValueDescription("Dns Over Https Url")
-    val doh: String by value("https://public.dns.iij.jp/dns-query")
+    override val doh: String by value(DefaultDnsOverHttps)
 
+    @ValueName("sni")
     @ValueDescription("SNI HostName Remove Regex")
-    val sni: List<String> by value(listOf("""sukebei\.nyaa\.(si|net)"""))
+    override val sni: Set<String> by value(DefaultSNIHosts)
 
     @ValueDescription("MAP(host, proxy), default by host=127.0.0.1")
-    val proxy: MutableMap<String, String> by value(mutableMapOf(
-        "www.google.com" to "http://127.0.0.1:8080",
-        "twitter.com" to "socks://127.0.0.1:1080"
-    ))
+    override val proxy: Map<String, String> by value(DefaultProxy)
+
+    @ValueDescription("DNS CNAME")
+    override val cname: Map<Regex, List<String>> by value(DefaultCNAME.mapKeys { it.key.toString() })
+        .mapKeys(::Regex, ""::plus)
 }
