@@ -136,7 +136,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
 
     override fun close() = client.close()
 
-    protected open val ignoreMax = 20
+    protected open val max = 20
 
     suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = supervisorScope {
         var count = 0
@@ -147,7 +147,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
                 return@supervisorScope it
             }.onFailure { throwable ->
                 if (isActive && ignore(throwable)) {
-                    if (++count > ignoreMax) {
+                    if (++count > max) {
                         throw throwable
                     }
                 } else {
