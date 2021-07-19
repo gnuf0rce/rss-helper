@@ -177,21 +177,25 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>): Dns {
     val dns = (if (doh.isNotBlank()) DnsOverHttps(doh) else Dns.SYSTEM)
 
     return object : Dns {
+
+        private val lookup: (String) -> List<InetAddress> = {
+            if (it.canParseAsIpAddress()) InetAddress.getAllByName(it).asList() else dns.lookup(it)
+        }
+
         override fun lookup(hostname: String): List<InetAddress> {
-            val lookup: (String) -> List<InetAddress> = {
-                if (hostname.canParseAsIpAddress()) InetAddress.getAllByName(it).asList() else dns.lookup(it)
-            }
             val result = mutableListOf<InetAddress>()
             val other = cname.flatMap { (regex, list) -> if (regex in hostname) list else emptyList() }
 
             other.forEach {
                 runCatching {
-                    result.addAll(lookup(it))
+                    result.addAll(it.let(lookup))
                 }
             }
 
-            runCatching {
-                result.addAll(lookup(hostname))
+            result.shuffle()
+
+            if (result.isEmpty()) runCatching {
+                result.addAll(hostname.let(lookup))
             }
 
             if (result.isEmpty()) runCatching {
@@ -205,15 +209,9 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>): Dns {
     }
 }
 
-fun DnsOverHttps(url: String, sni: Boolean = true): DnsOverHttps {
+fun DnsOverHttps(url: String): DnsOverHttps {
     return DnsOverHttps.Builder().apply {
-        client(OkHttpClient.Builder().apply {
-            if (sni) {
-                sslSocketFactory(RubySSLSocketFactory(listOf(url.toHttpUrl().host.toRegex())), RubyX509TrustManager)
-                hostnameVerifier { _, _ -> true }
-            }
-        }.build())
-        includeIPv6(false)
+        client(OkHttpClient())
         url(url.toHttpUrl())
         post(true)
         resolvePrivateAddresses(false)
