@@ -73,7 +73,7 @@ val DefaultProxy = mapOf(
     "twitter.com" to "socks://127.0.0.1:1080"
 )
 
-val DefaultSNIHosts: Set<String> = setOf("""sukebei\.nyaa\.(si|net)""")
+val DefaultSNIHosts = listOf("""sukebei\.nyaa\.(si|net)""".toRegex())
 
 interface RssHttpClientConfig {
 
@@ -83,7 +83,7 @@ interface RssHttpClientConfig {
 
     val proxy get() = DefaultProxy
 
-    val sni: Set<String> get() = DefaultSNIHosts
+    val sni get() = DefaultSNIHosts
 }
 
 open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
@@ -231,7 +231,6 @@ fun Url.toProxy(): Proxy {
 }
 
 class RubySSLSocketFactory(private val regexes: List<Regex>) : SSLSocketFactory() {
-    constructor(sni: Set<String>) : this(regexes = sni.map { it.toRegex() })
 
     private fun Socket.setServerNames(): Socket = when (this) {
         is SSLSocket -> apply {
