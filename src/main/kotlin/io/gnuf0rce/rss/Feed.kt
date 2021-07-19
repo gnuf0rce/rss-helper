@@ -1,6 +1,7 @@
 package io.gnuf0rce.rss
 
 import com.rometools.rome.feed.synd.*
+import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jsoup.Jsoup
@@ -16,13 +17,19 @@ internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { cl
             header(HttpHeaders.Host, url.host)
         }
     }.recoverCatching {
-        if (it is SSLException) {
-            throw SSLException("Host: ${url.host}, ${it.message}", it)
-        } else {
-            throw it
+        when(it) {
+            is SSLException -> {
+                throw SSLException("Host: ${url.host}, ${it.message}", it)
+            }
+            is ResponseException -> {
+                throw if ("Cloudflare" in it.message.orEmpty()) CloudflareException(it) else it
+            }
+            else -> throw it
         }
     }.getOrThrow()
 }
+
+class CloudflareException(override val cause: ResponseException): IllegalStateException("Need Cloudflare CAPTCHA", cause)
 
 private val SystemZoneOffset by lazy { OffsetDateTime.now().offset!! }
 
