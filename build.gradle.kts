@@ -43,6 +43,9 @@ dependencies {
     implementation(ktor("client-encoding", Versions.ktor)) {
         exclude(group = "io.ktor", module = "ktor-client-core")
     }
+    implementation(ktor("client-serialization", Versions.ktor)) {
+        exclude(group = "io.ktor", module = "ktor-client-core")
+    }
     // compileOnly(okhttp3("okhttp", Versions.okhttp))
     implementation(okhttp3("okhttp-dnsoverhttps", Versions.okhttp)) {
         exclude(group = "com.squareup.okhttp3")

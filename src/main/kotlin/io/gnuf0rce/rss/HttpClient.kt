@@ -7,6 +7,8 @@ import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.*
 import io.ktor.client.features.compression.*
+import io.ktor.client.features.json.*
+import io.ktor.client.features.json.serializer.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
@@ -15,6 +17,7 @@ import io.ktor.utils.io.core.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.json.Json
 import okhttp3.Dns
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
@@ -86,6 +89,13 @@ interface RssHttpClientConfig {
     val sni get() = DefaultSNIHosts
 }
 
+val DefaultRssJson = Json {
+    prettyPrint = true
+    ignoreUnknownKeys = true
+    isLenient = true
+    allowStructuredMapKeys = true
+}
+
 open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
     protected open val ignore: (Throwable) -> Boolean = {
         when (it) {
@@ -121,6 +131,9 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
         }
         install(RomeFeature) {
             parser = this@RssHttpClient.parser
+        }
+        Json {
+            serializer = KotlinxSerializer(DefaultRssJson)
         }
         engine {
             config {

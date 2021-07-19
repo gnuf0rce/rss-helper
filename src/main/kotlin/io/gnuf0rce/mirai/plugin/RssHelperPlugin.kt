@@ -31,6 +31,7 @@ object RssHelperPlugin : KotlinPlugin(
         RssTestCommand.register()
         RssMiraiCommand.register()
         RssHubCommand.register()
+        RssMoeCommand.register()
 
         RssSubscriber.start()
     }
@@ -42,6 +43,7 @@ object RssHelperPlugin : KotlinPlugin(
         RssTestCommand.unregister()
         RssMiraiCommand.unregister()
         RssHubCommand.unregister()
+        RssMoeCommand.unregister()
 
         RssSubscriber.stop()
     }

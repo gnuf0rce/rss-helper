@@ -42,6 +42,18 @@
 | `/<rss-mikan mikan> <bangumi> [id] [sub]?` | 添加一个Bangumi订阅   |
 | `/<rss-mikan mikan> <search> [word]`       | 添加一个Search订阅    |
 
+指令基于 [蜜柑计划](https://mikanani.me/)
+
+### RssMoeCommand
+
+| 指令                      | 描述            |
+|:--------------------------|:----------------|
+| `/<rss-moe> <recent>`     | 查看当季番剧TAG |
+| `/<rss-moe> <search>`     | 搜索TAG         |
+| `/<rss-moe> <tags> {ids}` | 添加一个Tag订阅 |
+
+指令基于 [萌番组](https://bangumi.moe/)
+
 ### RssTestCommand
 
 | 指令                        | 描述         |
