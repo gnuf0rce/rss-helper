@@ -105,7 +105,7 @@ suspend fun SyndEntry.toTorrent(subject: FileSupported): Message? {
     // TODO magnet to file
     val url = Url(torrent?.takeIf { it.startsWith("http") } ?: return null)
     return runCatching {
-        TorrentFolder.resolve("${uri.toFullWidth()}.torrent").apply {
+        TorrentFolder.resolve("${title.toFullWidth()}.torrent").apply {
             if (exists().not()) {
                 parentFile.mkdirs()
                 writeBytes(client.useHttpClient { it.get(url) })
@@ -114,7 +114,7 @@ suspend fun SyndEntry.toTorrent(subject: FileSupported): Message? {
     }.onFailure {
         return@toTorrent "下载种子失败, ${it.message}".toPlainText()
     }.mapCatching { file ->
-        subject.uploadFile("${uri.toFullWidth()}.torrent", file)
+        subject.uploadFile("${title.toFullWidth()}.torrent", file)
     }.onFailure {
         return@toTorrent "上传种子失败, ${it.message}".toPlainText()
     }.getOrNull()
