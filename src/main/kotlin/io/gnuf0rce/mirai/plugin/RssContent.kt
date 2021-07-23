@@ -1,6 +1,7 @@
 package io.gnuf0rce.mirai.plugin
 
 import com.rometools.rome.feed.synd.SyndEntry
+import com.rometools.rome.io.ParsingFeedException
 import io.gnuf0rce.mirai.plugin.data.*
 import io.gnuf0rce.rss.*
 import io.ktor.client.features.*
@@ -13,15 +14,12 @@ import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.RemoteFile.Companion.uploadFile
 import net.mamoe.mirai.utils.*
-import okhttp3.Dns
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 import org.jsoup.select.NodeTraversor
 import org.jsoup.select.NodeVisitor
 import java.io.IOException
-import java.net.*
-import javax.net.ssl.SSLHandshakeException
 
 internal val logger by RssHelperPlugin::logger
 
@@ -30,52 +28,27 @@ internal val ImageFolder get() = RssHelperPlugin.dataFolder.resolve("image")
 internal val TorrentFolder get() = RssHelperPlugin.dataFolder.resolve("torrent")
 
 internal val client: RssHttpClient by lazy {
-    object : RssHttpClient() {
+    object : RssHttpClient(), RssHttpClientConfig by HttpClientConfig {
         override val ignore: (Throwable) -> Boolean = {
             when (it) {
-                is ResponseException -> {
-                    false
-                }
-                is UnknownHostException -> {
-                    true
-                }
-                is SSLHandshakeException -> {
-                    logger.warning { "RssHttpClient Ignore, 握手失败，可能需要添加SNI过滤 $it" }
-                    true
-                }
                 is IOException,
                 is HttpRequestTimeoutException -> {
-                    logger.warning {
-                        "RssHttpClient Ignore $it"
+                    val message = it.message.orEmpty()
+                    when {
+                        "Connection reset" in message -> {
+                            logger.warning { "RssHttpClient Ignore 链接被重置，可能需要添加SNI过滤 $it" }
+                        }
+                        it is ParsingFeedException -> {
+                            logger.warning { "RssHttpClient Ignore XML解析失败 $it" }
+                        }
+                        else -> {
+                            logger.warning { "RssHttpClient Ignore $it" }
+                        }
                     }
                     true
                 }
                 else -> {
                     false
-                }
-            }
-        }
-
-        override val dns: Dns by lazy {
-            if (HttpClientConfig.doh.isNotBlank()) DnsOverHttps(HttpClientConfig.doh) else Dns.SYSTEM
-        }
-
-        override val sni: List<Regex> by lazy {
-            HttpClientConfig.sni.map { it.toRegex() }
-        }
-
-        override val proxySelector: ProxySelector = object : ProxySelector() {
-            override fun select(uri: URI?): MutableList<Proxy> {
-                return HttpClientConfig.proxy.filter { (host, _) ->
-                    host == uri?.host || host == "127.0.0.1"
-                }.map { (_, proxy) ->
-                    Url(proxy).toProxy()
-                }.toMutableList()
-            }
-
-            override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) {
-                logger.warning {
-                    "RssHttpClient proxy uri $ioe"
                 }
             }
         }
@@ -101,7 +74,7 @@ fun SyndEntry.toMessage(subject: Contact? = null, limit: Int = RssContentConfig.
     appendKeyValue("标题", title)
     appendKeyValue("链接", link)
     appendKeyValue("发布时间", published)
-    appendKeyValue("更新时间", updated)
+    appendKeyValue("更新时间", updated.takeIf { it != published })
     appendKeyValue("分类", categories.map { it.name })
     appendKeyValue("作者", author)
     appendKeyValue("种子", torrent)
@@ -132,7 +105,7 @@ suspend fun SyndEntry.toTorrent(subject: FileSupported): Message? {
     // TODO magnet to file
     val url = Url(torrent?.takeIf { it.startsWith("http") } ?: return null)
     return runCatching {
-        TorrentFolder.resolve("${uri.toFullWidth()}.torrent").apply {
+        TorrentFolder.resolve("${title.toFullWidth()}.torrent").apply {
             if (exists().not()) {
                 parentFile.mkdirs()
                 writeBytes(client.useHttpClient { it.get(url) })
@@ -141,7 +114,7 @@ suspend fun SyndEntry.toTorrent(subject: FileSupported): Message? {
     }.onFailure {
         return@toTorrent "下载种子失败, ${it.message}".toPlainText()
     }.mapCatching { file ->
-        subject.uploadFile("${uri.toFullWidth()}.torrent", file)
+        subject.uploadFile("${title.toFullWidth()}.torrent", file)
     }.onFailure {
         return@toTorrent "上传种子失败, ${it.message}".toPlainText()
     }.getOrNull()

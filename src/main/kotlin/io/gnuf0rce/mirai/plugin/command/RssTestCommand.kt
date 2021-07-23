@@ -10,7 +10,7 @@ import net.mamoe.mirai.message.data.toPlainText
 
 object RssTestCommand: CompositeCommand(
     owner = RssHelperPlugin,
-    "rss-test",
+    "rss-test", "rss-tools",
     description = "Rss 测试 相关指令",
     overrideContext = RssCommandArgumentContext
 ) {

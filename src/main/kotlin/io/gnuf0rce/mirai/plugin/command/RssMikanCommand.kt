@@ -10,7 +10,7 @@ import net.mamoe.mirai.message.data.toPlainText
 object RssMikanCommand : CompositeCommand(
     owner = RssHelperPlugin,
     "rss-mikan", "mikan",
-    description = "Mikan Plans Rss 订阅、取消、详情等相关指令",
+    description = "Mikan Plans Rss 订阅 系列 指令",
     overrideContext = RssCommandArgumentContext
 ) {
 

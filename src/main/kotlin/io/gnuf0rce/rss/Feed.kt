@@ -1,19 +1,35 @@
 package io.gnuf0rce.rss
 
 import com.rometools.rome.feed.synd.*
+import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jsoup.Jsoup
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.util.*
+import javax.net.ssl.SSLException
 import kotlin.properties.ReadOnlyProperty
 
 internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { client ->
-    client.get(url) {
-        header(HttpHeaders.Host, url.host)
-    }
+    runCatching{
+        client.get<SyndFeed>(url) {
+            header(HttpHeaders.Host, url.host)
+        }
+    }.recoverCatching {
+        when(it) {
+            is SSLException -> {
+                throw SSLException("Host: ${url.host}, ${it.message}", it)
+            }
+            is ResponseException -> {
+                throw if ("Cloudflare" in it.message.orEmpty()) CloudflareException(it) else it
+            }
+            else -> throw it
+        }
+    }.getOrThrow()
 }
+
+class CloudflareException(override val cause: ResponseException): IllegalStateException("Need Cloudflare CAPTCHA", cause)
 
 private val SystemZoneOffset by lazy { OffsetDateTime.now().offset!! }
 

@@ -16,12 +16,12 @@
 
 ### RssBaseCommand
 
-| 指令                                      | 描述                   |
-|:------------------------------------------|:-----------------------|
-| `/<rss 公招> <add> [url]`                 | 添加一个订阅           |
-| `/<rss 公招> <list>`                      | 列出订阅列表           |
-| `/<rss 公招> <interval> [url] [duration]` | 设置订阅间隔, 单位分钟 |
-| `/<rss 公招> <stop> [url]`                | 取消一个订阅           |
+| 指令                                 | 描述                   |
+|:-------------------------------------|:-----------------------|
+| `/<rss> <add> [url]`                 | 添加一个订阅           |
+| `/<rss> <list>`                      | 列出订阅列表           |
+| `/<rss> <interval> [url] [duration]` | 设置订阅间隔, 单位分钟 |
+| `/<rss> <stop> [url]`                | 取消一个订阅           |
 
 ### RssGithubCommand
 
@@ -41,6 +41,18 @@
 | `/<rss-mikan mikan> <classic>`             | 添加一个Classic订阅   |
 | `/<rss-mikan mikan> <bangumi> [id] [sub]?` | 添加一个Bangumi订阅   |
 | `/<rss-mikan mikan> <search> [word]`       | 添加一个Search订阅    |
+
+指令基于 [蜜柑计划](https://mikanani.me/)
+
+### RssMoeCommand
+
+| 指令                         | 描述            |
+|:-----------------------------|:----------------|
+| `/<rss-moe> <recent>`        | 查看当季番剧TAG |
+| `/<rss-moe> <search> [name]` | 搜索TAG         |
+| `/<rss-moe> <tags> {ids}`    | 添加一个Tag订阅 |
+
+指令基于 [萌番组](https://bangumi.moe/)
 
 ### RssTestCommand
 

@@ -4,6 +4,7 @@ import io.gnuf0rce.mirai.plugin.command.*
 import io.gnuf0rce.mirai.plugin.data.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
+import net.mamoe.mirai.console.data.PluginConfig
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 
@@ -14,11 +15,15 @@ object RssHelperPlugin : KotlinPlugin(
     }
 ) {
 
+    private fun <T : PluginConfig> T.save() = loader.configStorage.store(this@RssHelperPlugin, this)
+
     override fun onEnable() {
         FeedRecordData.reload()
         SubscribeRecordData.reload()
         RssHubConfig.reload()
+        RssHubConfig.save()
         HttpClientConfig.reload()
+        HttpClientConfig.save()
 
         RssBaseCommand.register()
         RssGithubCommand.register()
@@ -26,6 +31,7 @@ object RssHelperPlugin : KotlinPlugin(
         RssTestCommand.register()
         RssMiraiCommand.register()
         RssHubCommand.register()
+        RssMoeCommand.register()
 
         RssSubscriber.start()
     }
@@ -37,6 +43,7 @@ object RssHelperPlugin : KotlinPlugin(
         RssTestCommand.unregister()
         RssMiraiCommand.unregister()
         RssHubCommand.unregister()
+        RssMoeCommand.unregister()
 
         RssSubscriber.stop()
     }

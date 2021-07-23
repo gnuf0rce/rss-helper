@@ -77,7 +77,7 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
                     entry.history = entry.last.orNow()
                 }
             }.onFailure {
-                logger.warning("Rss: $link", it)
+                logger.warning { "Rss: $link $it" }
             }
         }
     }
