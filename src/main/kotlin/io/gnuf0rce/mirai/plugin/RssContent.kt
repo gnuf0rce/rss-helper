@@ -125,22 +125,20 @@ internal fun Element.src() = attr("src")
 internal fun Element.href() = attr("href")
 
 internal fun Element.image(subject: Contact?): MessageContent = runBlocking {
-    if (subject == null) {
-        " [${src()}] ".toPlainText()
-    } else {
+    if (subject == null) return@runBlocking " [${src()}] ".toPlainText()
+
+    runCatching {
         val url = Url(src())
-        runCatching {
-            ImageFolder.resolve(url.filename).apply {
-                if (exists().not()) {
-                    parentFile.mkdirs()
-                    writeBytes(client.useHttpClient { it.get(url) })
-                }
+        ImageFolder.resolve(url.filename).apply {
+            if (exists().not()) {
+                parentFile.mkdirs()
+                writeBytes(client.useHttpClient { it.get(url) })
             }
-        }.mapCatching { image ->
-            image.uploadAsImage(subject)
-        }.getOrElse {
-            " [${src()}] ".toPlainText()
         }
+    }.mapCatching { image ->
+        image.uploadAsImage(subject)
+    }.getOrElse {
+        " [${src()}] ".toPlainText()
     }
 }
 
