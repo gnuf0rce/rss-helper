@@ -23,6 +23,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.dnsoverhttps.DnsOverHttps
 import okhttp3.internal.canParseAsIpAddress
+import okhttp3.internal.tls.OkHostnameVerifier
 import java.io.IOException
 import java.net.*
 import java.security.cert.X509Certificate
@@ -138,7 +139,9 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
         engine {
             config {
                 sslSocketFactory(RubySSLSocketFactory(sni), RubyX509TrustManager)
-                hostnameVerifier { _, _ -> true }
+                hostnameVerifier { hostname, session ->
+                    sni.any { it in hostname } || OkHostnameVerifier.verify(hostname, session)
+                }
                 proxySelector(ProxySelector(this@RssHttpClient.proxy))
                 dns(Dns(doh, cname))
             }
@@ -175,7 +178,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
 fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySelector() {
     override fun select(uri: URI?): MutableList<Proxy> {
         return proxy.mapNotNull { (host, url) ->
-            if (uri?.host.orEmpty() == host || host == "127.0.0.1") {
+            if (uri?.host == host || host == "127.0.0.1") {
                 Url(url).toProxy()
             } else {
                 null
@@ -243,41 +246,36 @@ fun Url.toProxy(): Proxy {
 
 class RubySSLSocketFactory(private val regexes: List<Regex>) : SSLSocketFactory() {
 
-    private fun Socket.setServerNames(): Socket = when (this) {
-        is SSLSocket -> apply {
-            // logger.info { inetAddress.hostAddress }
-            sslParameters = sslParameters.apply {
-                // cipherSuites = supportedCipherSuites
-                // protocols = supportedProtocols
-                serverNames = serverNames.orEmpty().filter { name ->
-                    if (name !is SNIHostName) return@filter true
-                    regexes.none { it in name.asciiName }
-                }
+    private fun Socket.setServerNames(): Socket = apply {
+        if (this !is SSLSocket) return@apply
+        sslParameters = sslParameters.apply {
+            serverNames = serverNames?.filter { name ->
+                if (name !is SNIHostName) return@filter true
+                regexes.none { it in name.asciiName }
             }
         }
-        else -> this
     }
 
-    private val socketFactory: SSLSocketFactory = SSLContext.getDefault().socketFactory
+    private val default: SSLSocketFactory = SSLContext.getDefault().socketFactory
 
     override fun createSocket(socket: Socket?, host: String?, port: Int, autoClose: Boolean): Socket? =
-        socketFactory.createSocket(socket, host, port, autoClose)?.setServerNames()
+        default.createSocket(socket, host, port, autoClose)?.setServerNames()
 
     override fun createSocket(host: String?, port: Int): Socket? =
-        socketFactory.createSocket(host, port)?.setServerNames()
+        default.createSocket(host, port)?.setServerNames()
 
     override fun createSocket(host: String?, port: Int, localHost: InetAddress?, localPort: Int): Socket? =
-        socketFactory.createSocket(host, port, localHost, localPort)?.setServerNames()
+        default.createSocket(host, port, localHost, localPort)?.setServerNames()
 
     override fun createSocket(host: InetAddress?, port: Int): Socket? =
-        socketFactory.createSocket(host, port)?.setServerNames()
+        default.createSocket(host, port)?.setServerNames()
 
     override fun createSocket(address: InetAddress?, port: Int, localAddress: InetAddress?, localPort: Int): Socket? =
-        socketFactory.createSocket(address, port, localAddress, localPort)?.setServerNames()
+        default.createSocket(address, port, localAddress, localPort)?.setServerNames()
 
-    override fun getDefaultCipherSuites(): Array<String> = emptyArray()
+    override fun getDefaultCipherSuites(): Array<String> = default.defaultCipherSuites
 
-    override fun getSupportedCipherSuites(): Array<String> = emptyArray()
+    override fun getSupportedCipherSuites(): Array<String> = default.supportedCipherSuites
 }
 
 private object RubyX509TrustManager : X509TrustManager {
