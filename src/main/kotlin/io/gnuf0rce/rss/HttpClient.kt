@@ -83,6 +83,8 @@ interface RssHttpClientConfig {
 
     val doh get() = DefaultDnsOverHttps
 
+    val ipv6 get() = false
+
     val cname get() = DefaultCNAME
 
     val proxy get() = DefaultProxy
@@ -143,7 +145,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
                     sni.any { it in hostname } || OkHostnameVerifier.verify(hostname, session)
                 }
                 proxySelector(ProxySelector(this@RssHttpClient.proxy))
-                dns(Dns(doh, cname))
+                dns(Dns(doh, cname, ipv6))
             }
         }
     }
@@ -189,8 +191,8 @@ fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySel
     override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) = Unit
 }
 
-fun Dns(doh: String, cname: Map<Regex, List<String>>): Dns {
-    val dns = (if (doh.isNotBlank()) DnsOverHttps(doh) else Dns.SYSTEM)
+fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns {
+    val dns = (if (doh.isNotBlank()) DnsOverHttps(doh, ipv6) else Dns.SYSTEM)
 
     return object : Dns {
 
@@ -225,11 +227,12 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>): Dns {
     }
 }
 
-fun DnsOverHttps(url: String): DnsOverHttps {
+fun DnsOverHttps(url: String, ipv6: Boolean): DnsOverHttps {
     return DnsOverHttps.Builder().apply {
         client(OkHttpClient())
         url(url.toHttpUrl())
         post(true)
+        includeIPv6(ipv6)
         resolvePrivateAddresses(false)
         resolvePublicAddresses(true)
     }.build()

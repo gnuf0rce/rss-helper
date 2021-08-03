@@ -11,6 +11,9 @@ object HttpClientConfig : ReadOnlyPluginConfig("HttpClientConfig"), RssHttpClien
     @ValueDescription("Dns Over Https Url")
     override val doh: String by value(DefaultDnsOverHttps)
 
+    @ValueDescription("Use IPv6")
+    override val ipv6: Boolean by value(false)
+
     @ValueName("sni")
     @ValueDescription("SNI HostName Remove Regex")
     private val sni_: List<String> by value(DefaultSNIHosts.map { it.pattern })
