@@ -3,10 +3,9 @@ package io.gnuf0rce.mirai.plugin.command
 import io.gnuf0rce.mirai.plugin.*
 import io.gnuf0rce.rss.feed
 import io.ktor.http.*
-import net.mamoe.mirai.console.command.CommandSenderOnMessage
-import net.mamoe.mirai.console.command.CompositeCommand
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.message.data.toPlainText
+import net.mamoe.mirai.console.command.*
+import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.message.data.*
 
 object RssTestCommand: CompositeCommand(
     owner = RssHelperPlugin,

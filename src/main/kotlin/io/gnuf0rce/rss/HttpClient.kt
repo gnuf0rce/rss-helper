@@ -1,8 +1,7 @@
 package io.gnuf0rce.rss
 
-import com.rometools.rome.feed.synd.SyndFeed
-import com.rometools.rome.io.FeedException
-import com.rometools.rome.io.SyndFeedInput
+import com.rometools.rome.feed.synd.*
+import com.rometools.rome.io.*
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.*
@@ -14,21 +13,18 @@ import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
+import io.ktor.utils.io.errors.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.json.Json
-import okhttp3.Dns
+import kotlinx.serialization.json.*
+import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.dnsoverhttps.DnsOverHttps
-import okhttp3.internal.canParseAsIpAddress
-import okhttp3.internal.tls.OkHostnameVerifier
-import java.io.IOException
+import okhttp3.dnsoverhttps.*
+import okhttp3.internal.*
+import okhttp3.internal.tls.*
 import java.net.*
-import java.security.cert.X509Certificate
+import java.security.cert.*
 import javax.net.ssl.*
-import kotlin.coroutines.CoroutineContext
 
 class RomeFeature internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
 
@@ -150,7 +146,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
         }
     }
 
-    override val coroutineContext: CoroutineContext get() = client.coroutineContext
+    override val coroutineContext get() = client.coroutineContext
 
     override fun close() = client.close()
 
@@ -173,7 +169,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
                 }
             }
         }
-        throw CancellationException()
+        throw CancellationException(null, null)
     }
 }
 

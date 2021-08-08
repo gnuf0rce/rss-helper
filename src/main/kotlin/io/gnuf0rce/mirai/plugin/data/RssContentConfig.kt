@@ -1,8 +1,6 @@
 package io.gnuf0rce.mirai.plugin.data
 
-import net.mamoe.mirai.console.data.ReadOnlyPluginConfig
-import net.mamoe.mirai.console.data.ValueDescription
-import net.mamoe.mirai.console.data.value
+import net.mamoe.mirai.console.data.*
 
 object RssContentConfig : ReadOnlyPluginConfig("RssContentConfig") {
     @ValueDescription("Content limit length")
