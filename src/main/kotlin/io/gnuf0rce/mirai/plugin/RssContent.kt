@@ -32,15 +32,23 @@ internal val client: RssHttpClient by lazy {
                     val message = it.message.orEmpty()
                     when {
                         "Connection reset" in message -> {
-                            logger.warning { "RssHttpClient Ignore 链接被重置，可能需要添加SNI过滤 $it" }
+                            logger.warning { "RssHttpClient Ignore，链接被重置，可能需要添加SNI过滤 $it" }
                         }
-                        it is ParsingFeedException -> {
-                            logger.warning { "RssHttpClient Ignore XML解析失败 $it" }
+                        "handshake_failure" in message -> {
+                            runBlocking {
+                                val html = useHttpClient<String> { client -> client.get("https://ssl.haka.se/") }
+                                File(".").resolve("ssl.html").writeText(html)
+                            }
+                            logger.warning { "RssHttpClient Ignore，握手失败，请将 ssl.html 汇报给开发者 $it" }
                         }
                         else -> {
                             logger.warning { "RssHttpClient Ignore $it" }
                         }
                     }
+                    true
+                }
+                is ParsingFeedException -> {
+                    logger.warning { "RssHttpClient Ignore XML解析失败 $it" }
                     true
                 }
                 else -> {
