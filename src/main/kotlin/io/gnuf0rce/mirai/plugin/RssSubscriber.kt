@@ -68,14 +68,16 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
             runCatching {
                 client.feed(link)
             }.mapCatching { feed ->
-                feed.entries.filter { it.history == null || it.last.orMinimum() > it.history.orMinimum() }.forEach { entry ->
-                    logger.info { "${entry.uri}: ${entry.last.orMinimum()} ? ${entry.history}" }
-                    record.sendFile { contact -> entry.toTorrent(contact) }
-                    record.sendMessage { contact -> entry.toMessage(contact) }
-                    entry.history = entry.last.orNow()
-                }
+                feed.entries
+                    .filter { it.history == null || it.last.orMinimum() > it.history.orMinimum() }
+                    .forEach { entry ->
+                        logger.info { "${entry.uri}: ${entry.last.orMinimum()} ? ${entry.history}" }
+                        record.sendFile { contact -> entry.toTorrent(contact) }
+                        record.sendMessage { contact -> entry.toMessage(contact) }
+                        entry.history = entry.last.orNow()
+                    }
             }.onFailure {
-                logger.warning { "Rss: $link $it" }
+                logger.warning({ "Rss: $link" }, it)
             }
         }
     }
