@@ -17,7 +17,10 @@ import org.jsoup.nodes.*
 import org.jsoup.select.*
 import java.io.*
 
-internal val logger by RssHelperPlugin::logger
+internal val logger by lazy {
+    val open = System.getProperty("io.gnuf0rce.mirai.plugin.logger", "${true}").toBoolean()
+    if (open) RssHelperPlugin.logger else SilentLogger
+}
 
 internal val ImageFolder get() = RssHelperPlugin.dataFolder.resolve("image")
 
