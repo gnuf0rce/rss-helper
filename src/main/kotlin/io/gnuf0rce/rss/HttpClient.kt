@@ -243,19 +243,20 @@ fun Url.toProxy(): Proxy {
     return Proxy(type, InetSocketAddress(host, port))
 }
 
-class RubySSLSocketFactory(private val regexes: List<Regex>) : SSLSocketFactory() {
+class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocketFactory() {
+    companion object {
+        private val default: SSLSocketFactory = SSLContext.getDefault().socketFactory
+    }
 
     private fun Socket.setServerNames(): Socket = apply {
         if (this !is SSLSocket) return@apply
         sslParameters = sslParameters.apply {
             serverNames = serverNames?.filter { name ->
                 if (name !is SNIHostName) return@filter true
-                regexes.none { it in name.asciiName }
+                matcher.none { name.asciiName.matches(it) }
             }
         }
     }
-
-    private val default: SSLSocketFactory = SSLContext.getDefault().socketFactory
 
     override fun createSocket(socket: Socket?, host: String?, port: Int, autoClose: Boolean): Socket? =
         default.createSocket(socket, host, port, autoClose)?.setServerNames()

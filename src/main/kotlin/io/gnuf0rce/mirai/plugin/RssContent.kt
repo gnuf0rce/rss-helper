@@ -35,15 +35,7 @@ internal val client: RssHttpClient by lazy {
                             logger.warning { "RssHttpClient Ignore，链接被重置，可能需要添加SNI过滤 $it" }
                         }
                         "handshake_failure" in message -> {
-                            val html = File("ssl.html").apply {
-                                writeBytes(
-                                    runBlocking {
-                                        useHttpClient { client -> client.get("https://ssl.haka.se/") }
-                                    }
-                                )
-                            }
-
-                            logger.warning { "RssHttpClient Ignore，握手失败，请将 ${html.absolutePath} 汇报给开发者 $it" }
+                            logger.warning { "RssHttpClient Ignore，握手失败，如果出现频繁，请汇报给开发者 $it" }
                         }
                         else -> {
                             logger.warning { "RssHttpClient Ignore $it" }
