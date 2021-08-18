@@ -112,17 +112,18 @@ RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 
 ### RssHubConfig
 
-1. domain rsshub 服务器的域名，默认为官方的 rsshub.app
+* domain rsshub 服务器的域名，默认为官方的 rsshub.app
 
 ### HttpClientConfig
 
-1. doh Dns Over Https Url (为空时关闭Doh，使用系统DNS since 1.0.0-dev-6)
-1. sni 需要移除 SNI HostName 的域名的正则表达式列表
-1. proxy 代理列表 host: proxy, host=127.0.0.1时是全局代理
+* doh Dns Over Https Url (为空时关闭Doh，使用系统DNS since 1.0.0-dev-6)
+* sni 需要移除 SNI HostName 的域名的正则表达式列表
+* proxy 代理列表 host: proxy, host=127.0.0.1时是全局代理
+* ipv6 doh 开启ipv6 支持 (since 1.0.3)
 
 ### RssContentConfig
 
-1. limit 订阅内容输出到QQ消息的最大长度，超过则只会输出 `内容过长`
+* limit 订阅内容输出到QQ消息的最大长度，超过则只会输出 `内容过长`
 
 ## TODO
 
