@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.gnuf0rce"
-version = "1.0.1"
+version = "1.0.4"
 
 mirai {
     jvmTarget = JavaVersion.VERSION_11
@@ -17,6 +17,7 @@ mirai {
 }
 
 repositories {
+    removeIf { it is MavenArtifactRepository && it.url.host == "dl.bintray.com" }
     mavenLocal()
     maven(url = "https://maven.aliyun.com/repository/public")
     mavenCentral()

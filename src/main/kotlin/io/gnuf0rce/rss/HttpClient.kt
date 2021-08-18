@@ -1,8 +1,7 @@
 package io.gnuf0rce.rss
 
-import com.rometools.rome.feed.synd.SyndFeed
-import com.rometools.rome.io.FeedException
-import com.rometools.rome.io.SyndFeedInput
+import com.rometools.rome.feed.synd.*
+import com.rometools.rome.io.*
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.features.*
@@ -14,21 +13,18 @@ import io.ktor.http.*
 import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
+import io.ktor.utils.io.errors.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.CancellationException
-import kotlinx.serialization.json.Json
-import okhttp3.Dns
+import kotlinx.serialization.json.*
+import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.OkHttpClient
-import okhttp3.dnsoverhttps.DnsOverHttps
-import okhttp3.internal.canParseAsIpAddress
-import okhttp3.internal.tls.OkHostnameVerifier
-import java.io.IOException
+import okhttp3.dnsoverhttps.*
+import okhttp3.internal.*
+import okhttp3.internal.tls.*
 import java.net.*
-import java.security.cert.X509Certificate
+import java.security.cert.*
 import javax.net.ssl.*
-import kotlin.coroutines.CoroutineContext
 
 class RomeFeature internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
 
@@ -82,6 +78,8 @@ val DefaultSNIHosts = listOf("""sukebei\.nyaa\.(si|net)""".toRegex())
 interface RssHttpClientConfig {
 
     val doh get() = DefaultDnsOverHttps
+
+    val ipv6 get() = false
 
     val cname get() = DefaultCNAME
 
@@ -143,12 +141,12 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
                     sni.any { it in hostname } || OkHostnameVerifier.verify(hostname, session)
                 }
                 proxySelector(ProxySelector(this@RssHttpClient.proxy))
-                dns(Dns(doh, cname))
+                dns(Dns(doh, cname, ipv6))
             }
         }
     }
 
-    override val coroutineContext: CoroutineContext get() = client.coroutineContext
+    override val coroutineContext get() = client.coroutineContext
 
     override fun close() = client.close()
 
@@ -171,7 +169,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
                 }
             }
         }
-        throw CancellationException()
+        throw CancellationException(null, null)
     }
 }
 
@@ -189,8 +187,8 @@ fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySel
     override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) = Unit
 }
 
-fun Dns(doh: String, cname: Map<Regex, List<String>>): Dns {
-    val dns = (if (doh.isNotBlank()) DnsOverHttps(doh) else Dns.SYSTEM)
+fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns {
+    val dns = (if (doh.isNotBlank()) DnsOverHttps(doh, ipv6) else Dns.SYSTEM)
 
     return object : Dns {
 
@@ -225,14 +223,15 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>): Dns {
     }
 }
 
-fun DnsOverHttps(url: String): DnsOverHttps {
-    return DnsOverHttps.Builder().apply {
-        client(OkHttpClient())
-        url(url.toHttpUrl())
-        post(true)
-        resolvePrivateAddresses(false)
-        resolvePublicAddresses(true)
-    }.build()
+fun DnsOverHttps(url: String, ipv6: Boolean): DnsOverHttps {
+    return DnsOverHttps.Builder()
+        .client(OkHttpClient())
+        .url(url.toHttpUrl())
+        .post(true)
+        .includeIPv6(ipv6)
+        .resolvePrivateAddresses(false)
+        .resolvePublicAddresses(true)
+        .build()
 }
 
 fun Url.toProxy(): Proxy {
@@ -244,19 +243,20 @@ fun Url.toProxy(): Proxy {
     return Proxy(type, InetSocketAddress(host, port))
 }
 
-class RubySSLSocketFactory(private val regexes: List<Regex>) : SSLSocketFactory() {
+class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocketFactory() {
+    companion object {
+        private val default: SSLSocketFactory = SSLContext.getDefault().socketFactory
+    }
 
     private fun Socket.setServerNames(): Socket = apply {
         if (this !is SSLSocket) return@apply
         sslParameters = sslParameters.apply {
             serverNames = serverNames?.filter { name ->
                 if (name !is SNIHostName) return@filter true
-                regexes.none { it in name.asciiName }
+                matcher.none { name.asciiName.matches(it) }
             }
         }
     }
-
-    private val default: SSLSocketFactory = SSLContext.getDefault().socketFactory
 
     override fun createSocket(socket: Socket?, host: String?, port: Int, autoClose: Boolean): Socket? =
         default.createSocket(socket, host, port, autoClose)?.setServerNames()

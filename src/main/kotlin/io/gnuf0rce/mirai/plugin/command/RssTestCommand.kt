@@ -2,11 +2,12 @@ package io.gnuf0rce.mirai.plugin.command
 
 import io.gnuf0rce.mirai.plugin.*
 import io.gnuf0rce.rss.feed
+import io.ktor.client.request.*
 import io.ktor.http.*
-import net.mamoe.mirai.console.command.CommandSenderOnMessage
-import net.mamoe.mirai.console.command.CompositeCommand
-import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.message.data.toPlainText
+import net.mamoe.mirai.console.command.*
+import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.message.data.*
+import org.jsoup.*
 
 object RssTestCommand: CompositeCommand(
     owner = RssHelperPlugin,
@@ -18,6 +19,12 @@ object RssTestCommand: CompositeCommand(
     @Description("测试一个订阅")
     suspend fun CommandSenderOnMessage<*>.build(url: Url) = sendMessage {
         client.feed(url).entries.first().toMessage(fromEvent.subject)
+    }
+
+    @SubCommand
+    suspend fun CommandSender.ssl() {
+        val html = Jsoup.parse(client.useHttpClient { it.get("https://ssl.haka.se/") })
+        sendMessage(html.wholeText())
     }
 
     @SubCommand

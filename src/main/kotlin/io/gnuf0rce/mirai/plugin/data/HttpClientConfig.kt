@@ -2,14 +2,14 @@ package io.gnuf0rce.mirai.plugin.data
 
 import io.gnuf0rce.rss.*
 import net.mamoe.mirai.console.data.PluginDataExtensions.mapKeys
-import net.mamoe.mirai.console.data.ReadOnlyPluginConfig
-import net.mamoe.mirai.console.data.ValueDescription
-import net.mamoe.mirai.console.data.ValueName
-import net.mamoe.mirai.console.data.value
+import net.mamoe.mirai.console.data.*
 
 object HttpClientConfig : ReadOnlyPluginConfig("HttpClientConfig"), RssHttpClientConfig {
     @ValueDescription("Dns Over Https Url")
     override val doh: String by value(DefaultDnsOverHttps)
+
+    @ValueDescription("Use IPv6")
+    override val ipv6: Boolean by value(false)
 
     @ValueName("sni")
     @ValueDescription("SNI HostName Remove Regex")

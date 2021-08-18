@@ -1,10 +1,7 @@
 package io.gnuf0rce.mirai.plugin.data
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import net.mamoe.mirai.console.data.ReadOnlyPluginConfig
-import net.mamoe.mirai.console.data.ValueDescription
-import net.mamoe.mirai.console.data.value
+import kotlinx.serialization.*
+import net.mamoe.mirai.console.data.*
 
 object RssHubConfig : ReadOnlyPluginConfig("RssHubConfig") {
     @ValueDescription("RssHub域名，默认为官方源")

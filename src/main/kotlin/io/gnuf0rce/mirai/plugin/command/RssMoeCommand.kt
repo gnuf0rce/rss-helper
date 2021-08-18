@@ -1,20 +1,14 @@
 package io.gnuf0rce.mirai.plugin.command
 
-import io.gnuf0rce.mirai.plugin.RssHelperPlugin
-import io.gnuf0rce.mirai.plugin.RssSubscriber
-import io.gnuf0rce.mirai.plugin.client
+import io.gnuf0rce.mirai.plugin.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import net.mamoe.mirai.console.command.CommandSenderOnMessage
-import net.mamoe.mirai.console.command.CompositeCommand
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.message.data.Message
-import net.mamoe.mirai.message.data.buildMessageChain
-import net.mamoe.mirai.message.data.toPlainText
+import kotlinx.serialization.json.*
+import net.mamoe.mirai.console.command.*
+import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
-import java.io.InputStream
+import java.io.*
 
 object RssMoeCommand : CompositeCommand(
     owner = RssHelperPlugin,
@@ -83,7 +77,7 @@ object RssMoeCommand : CompositeCommand(
     @Description("添加一个Tags订阅")
     suspend fun CommandSenderOnMessage<*>.tags(vararg ids: String) = sendMessage {
         check(ids.isNotEmpty()) { "ids 为空" }
-        ids.forEach { check(it.matches(ID_REGEX)) { "$it Not Matches ${ID_REGEX.pattern}" } }
+        ids.forEach { check(it matches ID_REGEX) { "$it Not Matches ${ID_REGEX.pattern}" } }
         RssSubscriber.add(moe(ids.asList()), fromEvent.subject).let { (name, _, _) ->
             "Moe订阅任务[${name}]已添加".toPlainText()
         }

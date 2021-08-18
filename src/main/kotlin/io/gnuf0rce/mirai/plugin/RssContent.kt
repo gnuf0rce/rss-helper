@@ -1,27 +1,26 @@
 package io.gnuf0rce.mirai.plugin
 
-import com.rometools.rome.feed.synd.SyndEntry
-import com.rometools.rome.io.ParsingFeedException
+import com.rometools.rome.feed.synd.*
+import com.rometools.rome.io.*
 import io.gnuf0rce.mirai.plugin.data.*
 import io.gnuf0rce.rss.*
 import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlinx.coroutines.runBlocking
-import net.mamoe.mirai.contact.Contact
-import net.mamoe.mirai.contact.FileSupported
+import kotlinx.coroutines.*
+import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.RemoteFile.Companion.uploadFile
 import net.mamoe.mirai.utils.*
-import org.jsoup.nodes.Element
-import org.jsoup.nodes.Node
-import org.jsoup.nodes.TextNode
-import org.jsoup.select.NodeTraversor
-import org.jsoup.select.NodeVisitor
-import java.io.IOException
+import org.jsoup.nodes.*
+import org.jsoup.select.*
+import java.io.*
 
-internal val logger by RssHelperPlugin::logger
+internal val logger by lazy {
+    val open = System.getProperty("io.gnuf0rce.mirai.plugin.logger", "${true}").toBoolean()
+    if (open) RssHelperPlugin.logger else SilentLogger
+}
 
 internal val ImageFolder get() = RssHelperPlugin.dataFolder.resolve("image")
 
@@ -36,15 +35,19 @@ internal val client: RssHttpClient by lazy {
                     val message = it.message.orEmpty()
                     when {
                         "Connection reset" in message -> {
-                            logger.warning { "RssHttpClient Ignore 链接被重置，可能需要添加SNI过滤 $it" }
+                            logger.warning { "RssHttpClient Ignore，链接被重置，可能需要添加SNI过滤 $it" }
                         }
-                        it is ParsingFeedException -> {
-                            logger.warning { "RssHttpClient Ignore XML解析失败 $it" }
+                        "handshake_failure" in message -> {
+                            logger.warning { "RssHttpClient Ignore，握手失败，如果出现频繁，请汇报给开发者 $it" }
                         }
                         else -> {
                             logger.warning { "RssHttpClient Ignore $it" }
                         }
                     }
+                    true
+                }
+                is ParsingFeedException -> {
+                    logger.warning { "RssHttpClient Ignore XML解析失败 $it" }
                     true
                 }
                 else -> {
@@ -70,7 +73,7 @@ fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
     }
 }
 
-fun SyndEntry.toMessage(subject: Contact? = null, limit: Int = RssContentConfig.limit) = buildMessageChain {
+fun SyndEntry.toMessage(subject: Contact?, limit: Int = RssContentConfig.limit) = buildMessageChain {
     appendKeyValue("标题", title)
     appendKeyValue("链接", link)
     appendKeyValue("发布时间", published)

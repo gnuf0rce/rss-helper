@@ -4,12 +4,11 @@ import io.gnuf0rce.mirai.plugin.command.*
 import io.gnuf0rce.mirai.plugin.data.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
-import net.mamoe.mirai.console.data.PluginConfig
-import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
-import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
+import net.mamoe.mirai.console.data.*
+import net.mamoe.mirai.console.plugin.jvm.*
 
 object RssHelperPlugin : KotlinPlugin(
-    JvmPluginDescription("io.github.gnuf0rce.rss-helper", "1.0.0") {
+    JvmPluginDescription(id = "io.github.gnuf0rce.rss-helper", version = "1.0.4") {
         name("rss-helper")
         author("cssxsh")
     }
@@ -24,6 +23,8 @@ object RssHelperPlugin : KotlinPlugin(
         RssHubConfig.save()
         HttpClientConfig.reload()
         HttpClientConfig.save()
+        RssContentConfig.reload()
+        RssContentConfig.save()
 
         RssBaseCommand.register()
         RssGithubCommand.register()
