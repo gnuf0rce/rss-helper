@@ -224,14 +224,14 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns {
 }
 
 fun DnsOverHttps(url: String, ipv6: Boolean): DnsOverHttps {
-    return DnsOverHttps.Builder().apply {
-        client(OkHttpClient())
-        url(url.toHttpUrl())
-        post(true)
-        includeIPv6(ipv6)
-        resolvePrivateAddresses(false)
-        resolvePublicAddresses(true)
-    }.build()
+    return DnsOverHttps.Builder()
+        .client(OkHttpClient())
+        .url(url.toHttpUrl())
+        .post(true)
+        .includeIPv6(ipv6)
+        .resolvePrivateAddresses(false)
+        .resolvePublicAddresses(true)
+        .build()
 }
 
 fun Url.toProxy(): Proxy {
