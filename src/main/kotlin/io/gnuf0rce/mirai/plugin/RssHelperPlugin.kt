@@ -23,6 +23,8 @@ object RssHelperPlugin : KotlinPlugin(
         RssHubConfig.save()
         HttpClientConfig.reload()
         HttpClientConfig.save()
+        RssContentConfig.reload()
+        RssContentConfig.save()
 
         RssBaseCommand.register()
         RssGithubCommand.register()
