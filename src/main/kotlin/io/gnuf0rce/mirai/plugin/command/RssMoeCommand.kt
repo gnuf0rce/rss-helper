@@ -77,7 +77,7 @@ object RssMoeCommand : CompositeCommand(
     @Description("添加一个Tags订阅")
     suspend fun CommandSenderOnMessage<*>.tags(vararg ids: String) = sendMessage {
         check(ids.isNotEmpty()) { "ids 为空" }
-        ids.forEach { check(it.matches(ID_REGEX)) { "$it Not Matches ${ID_REGEX.pattern}" } }
+        ids.forEach { check(it matches ID_REGEX) { "$it Not Matches ${ID_REGEX.pattern}" } }
         RssSubscriber.add(moe(ids.asList()), fromEvent.subject).let { (name, _, _) ->
             "Moe订阅任务[${name}]已添加".toPlainText()
         }
