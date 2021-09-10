@@ -95,6 +95,8 @@ val DefaultRssJson = Json {
     allowStructuredMapKeys = true
 }
 
+val DefaultRomeParser: () -> SyndFeedInput = ::SyndFeedInput
+
 open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
     protected open val ignore: (Throwable) -> Boolean = {
         when (it) {
@@ -114,8 +116,6 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
 
     protected open val timeout: Long = 30 * 1000L
 
-    protected open val parser: () -> SyndFeedInput = ::SyndFeedInput
-
     protected open val client = HttpClient(OkHttp) {
         BrowserUserAgent()
         ContentEncoding {
@@ -129,7 +129,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
             socketTimeoutMillis = timeout
         }
         install(RomeFeature) {
-            parser = this@RssHttpClient.parser
+            parser = DefaultRomeParser
         }
         Json {
             serializer = KotlinxSerializer(DefaultRssJson)
