@@ -23,7 +23,9 @@ import okhttp3.dnsoverhttps.*
 import okhttp3.internal.*
 import okhttp3.internal.tls.*
 import java.net.*
+import java.security.*
 import java.security.cert.*
+import java.util.concurrent.*
 import javax.net.ssl.*
 
 class RomeFeature internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
@@ -246,9 +248,21 @@ fun Url.toProxy(): Proxy {
     return Proxy(type, InetSocketAddress(host, port))
 }
 
+private fun X509TrustManager(): X509TrustManager {
+    val factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+    factory.init(null as KeyStore?)
+    return factory.trustManagers.filterIsInstance<X509TrustManager>().first()
+}
+
+private fun SSLContext(tm: X509TrustManager = X509TrustManager()): SSLContext {
+    return SSLContext.getInstance("TLS").apply {
+        init(null, arrayOf(tm), null)
+    }
+}
+
 class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocketFactory() {
     companion object {
-        private val default: SSLSocketFactory = SSLContext.getDefault().socketFactory
+        private val default: SSLSocketFactory = SSLContext(tm = RubyX509TrustManager).socketFactory
     }
 
     private fun Socket.setServerNames(): Socket = apply {
@@ -281,11 +295,11 @@ class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocketFactory(
     override fun getSupportedCipherSuites(): Array<String> = default.supportedCipherSuites
 }
 
-private object RubyX509TrustManager : X509TrustManager {
+object RubyX509TrustManager : X509TrustManager by X509TrustManager() {
 
     override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
 
     override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
 
-    override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+    // override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
 }
