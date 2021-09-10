@@ -136,6 +136,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
         }
         engine {
             config {
+                connectionPool(ConnectionPool(6, 15, TimeUnit.MINUTES))
                 sslSocketFactory(RubySSLSocketFactory(sni), RubyX509TrustManager)
                 hostnameVerifier { hostname, session ->
                     sni.any { it in hostname } || OkHostnameVerifier.verify(hostname, session)
@@ -151,6 +152,8 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
     override fun close() = client.close()
 
     protected open val max = 20
+
+    protected val engine get() = (client.engineConfig as OkHttpConfig)
 
     suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = supervisorScope {
         var count = 0

@@ -38,6 +38,10 @@ internal val client: RssHttpClient by lazy {
                             logger.warning { "RssHttpClient Ignore，链接被重置，可能需要添加SNI过滤 $it" }
                         }
                         "handshake_failure" in message -> {
+                            engine.config {
+                                @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+                                connectionPool.evictAll()
+                            }
                             logger.warning { "RssHttpClient Ignore，握手失败，如果出现频繁，请汇报给开发者 $it" }
                         }
                         else -> {
