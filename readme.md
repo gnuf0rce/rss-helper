@@ -142,5 +142,5 @@ RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 ### 手动安装
 
 * 运行 [Mirai Console](https://github.com/mamoe/mirai-console) 生成`plugins`文件夹
-* 从 [Releases](https://github.com/cssxsh/weibo-helper/releases) 下载`jar`并将其放入`plugins`文件夹中
+* 从 [Releases](https://github.com/gnuf0rce/rss-helper/releases) 下载`jar`并将其放入`plugins`文件夹中
   
