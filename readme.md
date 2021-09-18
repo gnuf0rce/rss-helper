@@ -59,6 +59,7 @@
 | 指令                        | 描述         |
 |:----------------------------|:-------------|
 | `/<rss-test> <build> [url]` | 测试一个订阅 |
+| `/<rss-test> <ssl>`         | 测试SSL      |
 | `/<rss-test> <clear>`       | 清空种子文件 |
 
 ### RssMiraiCommand
@@ -131,4 +132,15 @@ RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 - [x] 代理支持
 - [x] Doh支持
 - [x] 将Html转化为Mirai的MessageChain(主要目的是显示图片)
+
+## 安装
+
+### MCL 指令安装
+
+`./mcl --update-package io.github.gnuf0rce:rss-helper --channel stable --type plugin`
+
+### 手动安装
+
+* 运行 [Mirai Console](https://github.com/mamoe/mirai-console) 生成`plugins`文件夹
+* 从 [Releases](https://github.com/cssxsh/weibo-helper/releases) 下载`jar`并将其放入`plugins`文件夹中
   
