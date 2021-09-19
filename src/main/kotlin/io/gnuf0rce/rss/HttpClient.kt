@@ -120,11 +120,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
 
     protected open val client = HttpClient(OkHttp) {
         BrowserUserAgent()
-        ContentEncoding {
-            gzip()
-            deflate()
-            identity()
-        }
+        ContentEncoding()
         install(HttpTimeout) {
             requestTimeoutMillis = timeout
             connectTimeoutMillis = timeout
