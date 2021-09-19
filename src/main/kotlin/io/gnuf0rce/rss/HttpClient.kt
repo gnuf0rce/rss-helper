@@ -49,7 +49,7 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
         override fun prepare(block: Config.() -> Unit): RomeFeature = RomeFeature(Config().apply(block))
 
         override fun install(feature: RomeFeature, scope: HttpClient) {
-            scope.requestPipeline.intercept(HttpRequestPipeline.Transform) { payload ->
+            scope.requestPipeline.intercept(HttpRequestPipeline.Transform) {
                 feature.accept.forEach { context.accept(it) }
             }
 
