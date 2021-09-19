@@ -1,4 +1,4 @@
-package io.gnuf0rce.mirai.plugin.command
+package io.github.gnuf0rce.mirai.plugin.command
 
 import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*

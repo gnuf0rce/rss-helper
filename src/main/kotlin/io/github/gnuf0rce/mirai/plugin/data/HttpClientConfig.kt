@@ -1,6 +1,6 @@
-package io.gnuf0rce.mirai.plugin.data
+package io.github.gnuf0rce.mirai.plugin.data
 
-import io.gnuf0rce.rss.*
+import io.github.gnuf0rce.rss.*
 import net.mamoe.mirai.console.data.PluginDataExtensions.mapKeys
 import net.mamoe.mirai.console.data.*
 

@@ -1,4 +1,4 @@
-package io.gnuf0rce.mirai.plugin.data
+package io.github.gnuf0rce.mirai.plugin.data
 
 import io.ktor.http.*
 import kotlinx.serialization.*

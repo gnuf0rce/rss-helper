@@ -1,7 +1,7 @@
-package io.gnuf0rce.mirai.plugin
+package io.github.gnuf0rce.mirai.plugin
 
-import io.gnuf0rce.mirai.plugin.command.*
-import io.gnuf0rce.mirai.plugin.data.*
+import io.github.gnuf0rce.mirai.plugin.command.*
+import io.github.gnuf0rce.mirai.plugin.data.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.data.*

@@ -1,4 +1,4 @@
-package io.gnuf0rce.rss
+package io.github.gnuf0rce.rss
 
 import com.rometools.rome.feed.synd.*
 import io.ktor.client.features.*

@@ -1,8 +1,8 @@
-package io.gnuf0rce.mirai.plugin
+package io.github.gnuf0rce.mirai.plugin
 
 import com.rometools.rome.feed.synd.*
-import io.gnuf0rce.mirai.plugin.data.*
-import io.gnuf0rce.rss.*
+import io.github.gnuf0rce.mirai.plugin.data.*
+import io.github.gnuf0rce.rss.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.*
