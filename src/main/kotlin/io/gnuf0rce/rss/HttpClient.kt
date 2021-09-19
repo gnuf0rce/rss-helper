@@ -8,6 +8,7 @@ import io.ktor.client.features.*
 import io.ktor.client.features.compression.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
+import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
@@ -48,6 +49,10 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
         override fun prepare(block: Config.() -> Unit): RomeFeature = RomeFeature(Config().apply(block))
 
         override fun install(feature: RomeFeature, scope: HttpClient) {
+            scope.requestPipeline.intercept(HttpRequestPipeline.Transform) { payload ->
+                feature.accept.forEach { context.accept(it) }
+            }
+
             scope.responsePipeline.intercept(HttpResponsePipeline.Parse) { (info, body) ->
                 if (body !is ByteReadChannel) return@intercept
 
