@@ -5,6 +5,7 @@ import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jsoup.*
+import org.jsoup.parser.*
 import java.time.*
 import java.util.*
 import javax.net.ssl.*
@@ -66,7 +67,7 @@ internal val Html by ContentType.Text::Html
 
 internal val Plain by ContentType.Text::Plain
 
-internal val SyndContent.text get() = if (Html.match(contentType)) Jsoup.parse(value).text() else value
+internal val SyndContent.text get() = if (Html.match(contentType)) Jsoup.parse(value).wholeText() else value
 
 internal fun SyndEntry.find(type: ContentType) = (contents + description).find { type.match(it.contentType) }
 
@@ -78,7 +79,7 @@ internal val SyndEntry.html get() = find(Html)?.let { Jsoup.parse(it.value) }
 /**
  * 查找第一个 [ContentType] 为 [Plain] 的 [SyndContent]
  */
-internal val SyndEntry.text get() = find(Plain)?.value
+internal val SyndEntry.text get() = find(Plain)?.let { Parser.unescapeEntities(it.text, false) }
 
 /**
  * 查找第一个 [ContentType] 为 [Bittorrent] 的 [SyndEnclosure]，取 URL

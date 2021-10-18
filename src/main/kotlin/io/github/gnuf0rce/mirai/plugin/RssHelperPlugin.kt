@@ -8,7 +8,7 @@ import net.mamoe.mirai.console.data.*
 import net.mamoe.mirai.console.plugin.jvm.*
 
 object RssHelperPlugin : KotlinPlugin(
-    JvmPluginDescription(id = "io.github.gnuf0rce.rss-helper", version = "1.0.4") {
+    JvmPluginDescription(id = "io.github.gnuf0rce.rss-helper", version = "1.0.5") {
         name("rss-helper")
         author("cssxsh")
     }
