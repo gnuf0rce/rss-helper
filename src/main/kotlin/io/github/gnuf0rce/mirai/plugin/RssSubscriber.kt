@@ -33,30 +33,30 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
     }
 
     private suspend fun SubscribeRecord.sendMessage(block: suspend (Contact) -> Message) {
-        contacts.forEach { id ->
+        for (id in contacts) {
             runCatching {
-                Bot.instances.first { it.getContactOrNull(id) != null }.getContact(id)
+                Bot.instances.firstNotNullOf { it.getContactOrNull(id) }
             }.onFailure {
-                logger.warning("查找联系人${id}失败", it)
+                logger.warning({ "查找联系人${id}失败" }, it)
             }.mapCatching { contact ->
                 contact.sendMessage(block(contact))
             }.onFailure {
-                logger.warning("向${id}发送消息失败", it)
+                logger.warning({ "向${id}发送消息失败" }, it)
             }
         }
     }
 
     private suspend fun SubscribeRecord.sendFile(block: suspend (FileSupported) -> Message?) {
-        contacts.forEach { id ->
+        for (id in contacts) {
             runCatching {
                 Bot.instances.first { it.getContactOrNull(id) != null }.getContact(id)
             }.onFailure {
-                logger.warning("查找联系人${id}失败", it)
+                logger.warning({ "查找联系人${id}失败" }, it)
             }.mapCatching { contact ->
                 if (contact !is FileSupported) return@mapCatching
                 contact.sendMessage(block(contact) ?: return@mapCatching)
             }.onFailure {
-                logger.warning("向${id}发送文件失败", it)
+                logger.warning({ "向${id}发送文件失败" }, it)
             }
         }
     }
@@ -65,9 +65,8 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
         while (isActive) {
             val record = mutex.withLock { records[link]?.takeIf { it.contacts.isNotEmpty() } } ?: return@launch
             delay(record.interval * 60 * 1000L)
-            runCatching {
-                client.feed(link)
-            }.mapCatching { feed ->
+            try {
+                val feed = client.feed(link)
                 feed.entries
                     .filter { it.history == null || it.last.orMinimum() > it.history.orMinimum() }
                     .forEach { entry ->
@@ -76,8 +75,8 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
                         record.sendMessage { contact -> entry.toMessage(contact) }
                         entry.history = entry.last.orNow()
                     }
-            }.onFailure {
-                logger.warning({ "Rss: $link" }, it)
+            } catch (e: Throwable) {
+                logger.warning({ "Rss: $link" }, e)
             }
         }
     }
@@ -87,7 +86,7 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
         val new = if (old.contacts.isEmpty()) {
             val feed = client.feed(url)
             val now = OffsetDateTime.now()
-            feed.entries.forEach { it.history = now }
+            for (entry in feed.entries) entry.history = now
             task(url)
             SubscribeRecord(contacts = setOf(subject.id), name = feed.title)
         } else {

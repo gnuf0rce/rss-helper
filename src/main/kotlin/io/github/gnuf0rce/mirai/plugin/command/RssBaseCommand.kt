@@ -16,9 +16,8 @@ object RssBaseCommand : CompositeCommand(
     @SubCommand
     @Description("添加一个订阅")
     suspend fun CommandSenderOnMessage<*>.add(url: Url) = sendMessage {
-        RssSubscriber.add(url, fromEvent.subject).let { (name, _, _) ->
-            "RSS订阅任务[${name}]已添加".toPlainText()
-        }
+        val (name) = RssSubscriber.add(url, fromEvent.subject)
+        "RSS订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
@@ -27,22 +26,20 @@ object RssBaseCommand : CompositeCommand(
         RssSubscriber.list(fromEvent.subject).entries.joinToString("\n") { (url, record) ->
             val base64 = url.toString().encode().base64()
             "[${record.name}](${base64})"
-        }.toPlainText()
+        }.ifBlank { "列表为空" }.toPlainText()
     }
 
     @SubCommand
     @Description("设置订阅间隔")
     suspend fun CommandSenderOnMessage<*>.interval(url: Url, duration: Int) = sendMessage {
-        RssSubscriber.interval(url, duration).let { (name, _, _) ->
-            "RSS订阅任务[${name}]设置订阅间隔${duration}m".toPlainText()
-        }
+        val (name) = RssSubscriber.interval(url, duration)
+        "RSS订阅任务[${name}]设置订阅间隔${duration}m".toPlainText()
     }
 
     @SubCommand
     @Description("取消一个订阅")
     suspend fun CommandSenderOnMessage<*>.stop(url: Url) = sendMessage {
-        RssSubscriber.stop(url, fromEvent.subject).let { (name, _, _) ->
-            "RSS订阅任务[${name}]已取消".toPlainText()
-        }
+        val (name) = RssSubscriber.stop(url, fromEvent.subject)
+        "RSS订阅任务[${name}]已取消".toPlainText()
     }
 }

@@ -30,8 +30,8 @@ object RssHubCommand : CompositeCommand(
         val routes = routes()
         sendMessage(routes.message)
         sendMessage("请输入路由名")
-        val name = fromEvent.nextMessage().content.trim()
-        val route = requireNotNull(routes.data[name]) { "未找到路由${name}" }
+        val key = fromEvent.nextMessage().content.trim()
+        val route = requireNotNull(routes.data[key]) { "未找到路由${key}" }
         sendMessage(route.routes.mapIndexed { index, s -> index to s }.joinToString("\n"))
         val link = if (route.routes.size > 1) {
             sendMessage("选择路由（输入序号）")
@@ -65,8 +65,7 @@ object RssHubCommand : CompositeCommand(
             }
         }.joinToString(separator = "/", prefix = "")
 
-        RssSubscriber.add(Url("https://${domain}${path}"), fromEvent.subject).let { (name, _, _) ->
-            "RSS订阅任务[${name}]已添加".toPlainText()
-        }
+        val (name) = RssSubscriber.add(Url("https://${domain}${path}"), fromEvent.subject)
+        "RSS订阅任务[${name}]已添加".toPlainText()
     }
 }

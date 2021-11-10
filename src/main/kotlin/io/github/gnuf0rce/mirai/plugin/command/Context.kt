@@ -11,10 +11,10 @@ import okio.ByteString.Companion.decodeBase64
 
 val RssCommandArgumentContext = buildCommandArgumentContext {
     Url::class with { raw, _ ->
-        runCatching {
+        try {
             Url(raw.decodeBase64()?.utf8() ?: raw)
-        }.getOrElse {
-            throw CommandArgumentParserException("无法解析${raw}为URL", it)
+        } catch (e: Throwable) {
+            throw CommandArgumentParserException("无法解析${raw}为URL", e)
         }
     }
 }

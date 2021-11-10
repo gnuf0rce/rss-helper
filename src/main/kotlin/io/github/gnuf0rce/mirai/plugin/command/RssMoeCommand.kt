@@ -36,10 +36,10 @@ object RssMoeCommand : CompositeCommand(
     }
 
     private suspend fun BangumiRecent.cover(contact: Contact): Message {
-        return runCatching {
+        return try {
             client.useHttpClient { it.get<InputStream>("https://bangumi.moe/$cover") }.uploadAsImage(contact)
-        }.getOrElse {
-            "封面下载失败 $it".toPlainText()
+        } catch (e: Throwable) {
+            "封面下载失败 $e".toPlainText()
         }
     }
 
@@ -47,11 +47,11 @@ object RssMoeCommand : CompositeCommand(
     @Description("查看当季番剧TAG")
     suspend fun CommandSenderOnMessage<*>.recent() = sendMessage {
         buildMessageChain {
-            this@RssMoeCommand.recent().forEach {
+            for (item in this@RssMoeCommand.recent()) {
                 appendLine("<=====================>")
-                add(it.cover(contact = fromEvent.subject))
-                appendLine("番名: ${it.name}")
-                appendLine("ID: ${it.tagId}")
+                add(item.cover(contact = fromEvent.subject))
+                appendLine("番名: ${item.name}")
+                appendLine("ID: ${item.tagId}")
             }
         }
     }
@@ -60,15 +60,15 @@ object RssMoeCommand : CompositeCommand(
     @Description("搜索TAG")
     suspend fun CommandSenderOnMessage<*>.search(name: String) = sendMessage {
         buildMessageChain {
-            this@RssMoeCommand.search(name).tag.apply {
-                if (isEmpty()) {
-                    appendLine("搜索结果为空")
-                    return@buildMessageChain
-                }
-            }.forEach {
-                appendLine("名称: ${it.locale["zh_cn"] ?: it.name}")
-                appendLine("类型: ${it.type}")
-                appendLine("ID: ${it.id}")
+            val list = this@RssMoeCommand.search(name).tag
+            if (list.isEmpty()) {
+                appendLine("搜索结果为空")
+                return@buildMessageChain
+            }
+            for (item in list) {
+                appendLine("名称: ${item.locale["zh_cn"] ?: item.name}")
+                appendLine("类型: ${item.type}")
+                appendLine("ID: ${item.id}")
             }
         }
     }
@@ -77,9 +77,8 @@ object RssMoeCommand : CompositeCommand(
     @Description("添加一个Tags订阅")
     suspend fun CommandSenderOnMessage<*>.tags(vararg ids: String) = sendMessage {
         check(ids.isNotEmpty()) { "ids 为空" }
-        ids.forEach { check(it matches ID_REGEX) { "$it Not Matches ${ID_REGEX.pattern}" } }
-        RssSubscriber.add(moe(ids.asList()), fromEvent.subject).let { (name, _, _) ->
-            "Moe订阅任务[${name}]已添加".toPlainText()
-        }
+        for (id in ids) check(id matches ID_REGEX) { "$id Not Matches ${ID_REGEX.pattern}" }
+        val (name) = RssSubscriber.add(moe(ids.asList()), fromEvent.subject)
+        "Moe订阅任务[${name}]已添加".toPlainText()
     }
 }

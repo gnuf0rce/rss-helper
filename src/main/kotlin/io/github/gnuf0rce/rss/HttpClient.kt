@@ -49,7 +49,7 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
 
         override fun install(feature: RomeFeature, scope: HttpClient) {
             scope.requestPipeline.intercept(HttpRequestPipeline.Transform) {
-                feature.accept.forEach { context.accept(it) }
+                for (type in feature.accept) context.accept(type)
             }
 
             scope.responsePipeline.intercept(HttpResponsePipeline.Parse) { (info, body) ->
@@ -159,11 +159,9 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
     suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = supervisorScope {
         var count = 0
         while (isActive) {
-            runCatching {
-                block(client)
-            }.onSuccess {
-                return@supervisorScope it
-            }.onFailure { throwable ->
+            try {
+                return@supervisorScope block(client)
+            } catch (throwable: Throwable) {
                 if (isActive && ignore(throwable)) {
                     if (++count > max) {
                         throw throwable
@@ -204,24 +202,25 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns {
             val result = mutableListOf<InetAddress>()
             val other = cname.flatMap { (regex, list) -> if (regex in hostname) list else emptyList() }
 
-            other.forEach {
-                runCatching {
-                    result.addAll(it.let(lookup))
+            for (item in other) {
+                try {
+                    result.addAll(item.let(lookup))
+                } catch (e: Throwable) {
+                    //
                 }
             }
 
-            result.shuffle()
-
-            if (result.isEmpty()) runCatching {
-                result.addAll(hostname.let(lookup))
-            }
-
-            if (result.isEmpty()) runCatching {
-                result.addAll(InetAddress.getAllByName(hostname))
+            if (result.isEmpty()) {
+                try {
+                    result.addAll(hostname.let(lookup))
+                } catch (e: Throwable) {
+                    //
+                }
             }
 
             return result.apply {
                 if (isEmpty()) throw UnknownHostException("$hostname and CNAME${other} ")
+                shuffle()
             }
         }
     }

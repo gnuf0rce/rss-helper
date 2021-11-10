@@ -23,32 +23,28 @@ object RssMikanCommand : CompositeCommand(
     @SubCommand
     @Description("添加一个MyBangumi订阅")
     suspend fun CommandSenderOnMessage<*>.my(token: String) = sendMessage {
-        RssSubscriber.add(MyBangumi(token), fromEvent.subject).let { (name, _, _) ->
-            "MyBangumi($token)订阅任务[${name}]已添加".toPlainText()
-        }
+        val (name) = RssSubscriber.add(MyBangumi(token), fromEvent.subject)
+        "MyBangumi($token)订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
     @Description("添加一个Classic订阅")
     suspend fun CommandSenderOnMessage<*>.classic() = sendMessage {
-        RssSubscriber.add(Classic, fromEvent.subject).let { (name, _, _) ->
-            "Classic订阅任务[${name}]已添加".toPlainText()
-        }
+        val (name) = RssSubscriber.add(Classic, fromEvent.subject)
+        "Classic订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
     @Description("添加一个Bangumi订阅")
     suspend fun CommandSenderOnMessage<*>.bangumi(id: Int, sub: Int? = null) = sendMessage {
-        RssSubscriber.add(Bangumi(id, sub), fromEvent.subject).let { (name, _, _) ->
-            "Bangumi($id by $sub)订阅任务[${name}]已添加".toPlainText()
-        }
+        val (name) = RssSubscriber.add(Bangumi(id, sub), fromEvent.subject)
+        "Bangumi($id by $sub)订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
     @Description("添加一个Search订阅")
     suspend fun CommandSenderOnMessage<*>.search(word: String) = sendMessage {
-        RssSubscriber.add(Search(word), fromEvent.subject).let { (name, _, _) ->
-            "Search($word)订阅任务[${name}]已添加".toPlainText()
-        }
+        val (name) = RssSubscriber.add(Search(word), fromEvent.subject)
+        "Search($word)订阅任务[${name}]已添加".toPlainText()
     }
 }

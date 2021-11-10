@@ -12,21 +12,21 @@ import javax.net.ssl.*
 import kotlin.properties.*
 
 internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { client ->
-    runCatching{
-        client.get<SyndFeed>(url) {
+    try {
+        client.get(url) {
             header(HttpHeaders.Host, url.host)
         }
-    }.recoverCatching {
-        when(it) {
+    } catch (e: Throwable) {
+        when(e) {
             is SSLException -> {
-                throw SSLException("Host: ${url.host}, ${it.message}", it)
+                throw SSLException("Host: ${url.host}, ${e.message}", e)
             }
             is ResponseException -> {
-                throw if ("Cloudflare" in it.message.orEmpty()) CloudflareException(it) else it
+                throw if ("Cloudflare" in e.message.orEmpty()) CloudflareException(e) else e
             }
-            else -> throw it
+            else -> throw e
         }
-    }.getOrThrow()
+    }
 }
 
 class CloudflareException(override val cause: ResponseException): IllegalStateException("Need Cloudflare CAPTCHA", cause)
