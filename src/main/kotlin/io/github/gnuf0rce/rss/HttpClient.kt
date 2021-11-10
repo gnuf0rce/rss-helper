@@ -26,7 +26,6 @@ import okhttp3.internal.tls.*
 import java.net.*
 import java.security.*
 import java.security.cert.*
-import java.util.concurrent.*
 import javax.net.ssl.*
 
 class RomeFeature internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
@@ -72,7 +71,6 @@ const val DefaultDnsOverHttps = "https://public.dns.iij.jp/dns-query"
 
 val DefaultCNAME = mapOf(
     "twimg.com".toRegex() to listOf("twimg.twitter.map.fastly.net", "pbs.twimg.com.akamaized.net"),
-    "github.com".toRegex() to listOf("13.229.188.59")
 )
 
 val DefaultProxy = mapOf(
@@ -81,6 +79,8 @@ val DefaultProxy = mapOf(
 )
 
 val DefaultSNIHosts = listOf("""sukebei\.nyaa\.(si|net)""".toRegex())
+
+const val DefaultTimeout = 30 * 1000L
 
 interface RssHttpClientConfig {
 
@@ -93,6 +93,8 @@ interface RssHttpClientConfig {
     val proxy get() = DefaultProxy
 
     val sni get() = DefaultSNIHosts
+
+    val timeout get() = DefaultTimeout
 }
 
 val DefaultRssJson = Json {
@@ -121,8 +123,6 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
         }
     }
 
-    protected open val timeout: Long = 30 * 1000L
-
     protected open val client = HttpClient(OkHttp) {
         BrowserUserAgent()
         ContentEncoding()
@@ -139,10 +139,10 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
         }
         engine {
             config {
-                connectionPool(ConnectionPool(6, 15, TimeUnit.MINUTES))
+                // connectionPool(ConnectionPool(5, 30, TimeUnit.SECONDS))
                 sslSocketFactory(RubySSLSocketFactory(sni), RubyX509TrustManager)
                 hostnameVerifier { hostname, session ->
-                    sni.any { it in hostname } || OkHostnameVerifier.verify(hostname, session)
+                    sni.any { it matches hostname } || OkHostnameVerifier.verify(hostname, session)
                 }
                 proxySelector(ProxySelector(this@RssHttpClient.proxy))
                 dns(Dns(doh, cname, ipv6))
@@ -155,8 +155,6 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
     override fun close() = client.close()
 
     protected open val max = 20
-
-    protected val engine get() = (client.engineConfig as OkHttpConfig)
 
     suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = supervisorScope {
         var count = 0
@@ -264,16 +262,22 @@ private fun SSLContext(tm: X509TrustManager = X509TrustManager()): SSLContext {
 class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocketFactory() {
     companion object {
         private val default: SSLSocketFactory = SSLContext(tm = RubyX509TrustManager).socketFactory
+        private val tls = arrayOf("TLSv1.3", "TLSv1.2", "TLSv1.1")
+        val logs = mutableMapOf<String, SSLParameters>()
     }
 
     private fun Socket.setServerNames(): Socket = apply {
         if (this !is SSLSocket) return@apply
+        val key = inetAddress.hostAddress
         sslParameters = sslParameters.apply {
+            protocols = tls
             serverNames = serverNames?.filter { name ->
-                if (name !is SNIHostName) return@filter true
-                matcher.none { name.asciiName.matches(it) }
+                name !is SNIHostName || matcher.none { name.asciiName.matches(it) }
             }
         }
+        logs[key] = sslParameters
+        session
+        addHandshakeCompletedListener { logs.remove(key) }
     }
 
     override fun createSocket(socket: Socket?, host: String?, port: Int, autoClose: Boolean): Socket? =

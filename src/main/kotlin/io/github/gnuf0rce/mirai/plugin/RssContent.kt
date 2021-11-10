@@ -16,6 +16,8 @@ import net.mamoe.mirai.utils.*
 import org.jsoup.nodes.*
 import org.jsoup.select.*
 import java.io.*
+import java.time.OffsetDateTime
+import javax.net.ssl.*
 
 internal val logger by lazy {
     val open = System.getProperty("io.github.gnuf0rce.mirai.plugin.logger", "${true}").toBoolean()
@@ -33,15 +35,23 @@ internal val client: RssHttpClient by lazy {
                 is IOException,
                 is HttpRequestTimeoutException -> {
                     val message = it.message.orEmpty()
+                    if (it is SSLException) {
+                        for ((key, ssl) in RubySSLSocketFactory.logs) {
+                            if (key !in it.message.orEmpty()) {
+                                File("./rss_ssl.log").appendText(buildString {
+                                    appendLine(key + OffsetDateTime.now() + it.message)
+                                    appendLine("protocols: ${ssl.protocols.asList()}")
+                                    appendLine("cipherSuites: ${ssl.cipherSuites.asList()}")
+                                    appendLine("serverNames: ${ssl.serverNames}")
+                                })
+                            }
+                        }
+                    }
                     when {
                         "Connection reset" in message -> {
                             logger.warning { "RssHttpClient Ignore，链接被重置，可能需要添加SNI过滤 $it" }
                         }
                         "handshake_failure" in message -> {
-                            engine.config {
-                                @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-                                connectionPool.evictAll()
-                            }
                             logger.warning { "RssHttpClient Ignore，握手失败，如果出现频繁，请汇报给开发者 $it" }
                         }
                         else -> {
@@ -59,6 +69,7 @@ internal val client: RssHttpClient by lazy {
                 }
             }
         }
+        override val timeout: Long get() = HttpClientConfig.timeout
     }
 }
 

@@ -16,6 +16,9 @@ object HttpClientConfig : ReadOnlyPluginConfig("HttpClientConfig"), RssHttpClien
     private val sni_: List<String> by value(DefaultSNIHosts.map { it.pattern })
     override val sni: List<Regex> by lazy { sni_.map { it.toRegex() } }
 
+    @ValueDescription("Http Timeout")
+    override val timeout: Long by value(DefaultTimeout)
+
     @ValueDescription("MAP(host, proxy), default by host=127.0.0.1")
     override val proxy: Map<String, String> by value(DefaultProxy)
 
