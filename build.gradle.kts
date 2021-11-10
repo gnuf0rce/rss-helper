@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.gnuf0rce"
-version = "1.0.5"
+version = "1.0.6"
 
 mavenCentralPublish {
     useCentralS01()
@@ -37,11 +37,9 @@ mirai {
 }
 
 repositories {
-    removeIf { it is MavenArtifactRepository && it.url.host == "dl.bintray.com" }
     mavenLocal()
     maven(url = "https://maven.aliyun.com/repository/public")
     mavenCentral()
-    jcenter()
     maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
     gradlePluginPortal()
 }
@@ -75,7 +73,7 @@ dependencies {
     // implementation(rome("modules", Versions.rome))
     implementation(jsoup(Versions.jsoup))
     // test
-    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter", version = Versions.junit)
+    testImplementation(kotlin("test"))
 }
 
 tasks {

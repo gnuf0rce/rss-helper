@@ -1,10 +1,10 @@
 
 object Versions {
     // mirai
-    const val mirai = "2.6.7"
+    const val mirai = "2.8.0"
     // kotlin
-    const val kotlin = "1.5.21"
-    const val ktor = "1.5.1"
+    const val kotlin = "1.5.31"
+    const val ktor = "1.5.4"
     // other
     const val junit = "5.6.2"
     const val rome = "1.15.0"

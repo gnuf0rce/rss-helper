@@ -20,6 +20,7 @@ object RssHubCommand : CompositeCommand(
 
     private val domain by RssHubConfig::domain
 
+    @OptIn(ExperimentalSerializationApi::class)
     private suspend fun routes(): RssHubRoutes {
         return Json.decodeFromString(client.useHttpClient { it.get("https://${domain}/api/routes") })
     }
