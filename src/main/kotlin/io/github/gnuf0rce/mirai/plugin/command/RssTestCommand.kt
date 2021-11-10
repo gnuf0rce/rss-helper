@@ -4,6 +4,7 @@ import io.github.gnuf0rce.mirai.plugin.*
 import io.github.gnuf0rce.rss.feed
 import io.ktor.client.request.*
 import io.ktor.http.*
+import kotlinx.coroutines.flow.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
@@ -30,8 +31,8 @@ object RssTestCommand: CompositeCommand(
     @SubCommand
     @Description("清空种子文件")
     suspend fun CommandSenderOnMessage<*>.clear(group: Group = fromEvent.subject as Group) = sendMessage {
-        group.filesRoot.listFilesCollection().forEach { file ->
-            if (file.getInfo()?.uploaderId  == group.bot.id && file.name.endsWith(".torrent")) {
+        group.files.root.files().collect { file ->
+            if (file.uploaderId  == group.bot.id && file.name.endsWith(".torrent")) {
                 file.delete()
             }
         }

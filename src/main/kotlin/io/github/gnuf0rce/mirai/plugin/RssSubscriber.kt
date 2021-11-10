@@ -13,6 +13,8 @@ import net.mamoe.mirai.console.util.CoroutineScopeUtils.childScope
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.*
+import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import java.io.File
 import java.time.*
 import kotlin.properties.*
 import kotlin.reflect.*
@@ -46,7 +48,8 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
         }
     }
 
-    private suspend fun SubscribeRecord.sendFile(block: suspend (FileSupported) -> Message?) {
+    private suspend fun SubscribeRecord.sendFile(block: suspend () -> File?) {
+        val file = block() ?: return
         for (id in contacts) {
             runCatching {
                 Bot.instances.first { it.getContactOrNull(id) != null }.getContact(id)
@@ -54,7 +57,7 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
                 logger.warning({ "查找联系人${id}失败" }, it)
             }.mapCatching { contact ->
                 if (contact !is FileSupported) return@mapCatching
-                contact.sendMessage(block(contact) ?: return@mapCatching)
+                file.toExternalResource().use { contact.files.uploadNewFile(file.name, it) }
             }.onFailure {
                 logger.warning({ "向${id}发送文件失败" }, it)
             }
@@ -71,7 +74,7 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
                     .filter { it.history == null || it.last.orMinimum() > it.history.orMinimum() }
                     .forEach { entry ->
                         logger.info { "${entry.uri}: ${entry.last.orMinimum()} ? ${entry.history}" }
-                        record.sendFile { contact -> entry.toTorrent(contact) }
+                        record.sendFile { entry.getTorrent() }
                         record.sendMessage { contact -> entry.toMessage(contact) }
                         entry.history = entry.last.orNow()
                     }

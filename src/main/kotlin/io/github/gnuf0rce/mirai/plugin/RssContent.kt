@@ -11,7 +11,6 @@ import kotlinx.coroutines.*
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
-import net.mamoe.mirai.utils.RemoteFile.Companion.uploadFile
 import net.mamoe.mirai.utils.*
 import org.jsoup.nodes.*
 import org.jsoup.select.*
@@ -119,23 +118,20 @@ private val FULLWIDTH_CHARS = mapOf(
 
 private fun String.toFullWidth(): String = fold("") { acc, char -> acc + (FULLWIDTH_CHARS[char] ?: char) }
 
-suspend fun SyndEntry.toTorrent(subject: FileSupported): Message? {
+suspend fun SyndEntry.getTorrent(): File? {
     // TODO magnet to file
     val url = Url(torrent?.takeIf { it.startsWith("http") } ?: return null)
-    return runCatching {
+    return try {
         TorrentFolder.resolve("${title.toFullWidth()}.torrent").apply {
             if (exists().not()) {
                 parentFile.mkdirs()
                 writeBytes(client.useHttpClient { it.get(url) })
             }
         }
-    }.onFailure {
-        return@toTorrent "下载种子失败, ${it.message}".toPlainText()
-    }.mapCatching { file ->
-        subject.uploadFile("${title.toFullWidth()}.torrent", file)
-    }.onFailure {
-        return@toTorrent "上传种子失败, ${it.message}".toPlainText()
-    }.getOrNull()
+    } catch (e: Throwable) {
+        logger.warning({ "下载种子失败, ${e.message}" }, e)
+        null
+    }
 }
 
 internal fun Element.src() = attr("src")
