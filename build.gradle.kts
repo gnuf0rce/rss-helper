@@ -3,11 +3,11 @@ plugins {
     kotlin("plugin.serialization") version Versions.kotlin
 
     id("net.mamoe.mirai-console") version Versions.mirai
-    id("net.mamoe.maven-central-publish") version "0.6.1"
+    id("net.mamoe.maven-central-publish") version "0.7.0"
 }
 
 group = "io.github.gnuf0rce"
-version = "1.0.6"
+version = "1.0.7"
 
 mavenCentralPublish {
     useCentralS01()
@@ -48,9 +48,6 @@ kotlin {
     sourceSets {
         all {
             languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
-            languageSettings.useExperimentalAnnotation("kotlin.ExperimentalStdlibApi")
-            languageSettings.useExperimentalAnnotation("io.ktor.util.KtorExperimentalAPI")
-            languageSettings.useExperimentalAnnotation("net.mamoe.mirai.console.util.ConsoleExperimentalApi")
         }
         test {
             languageSettings.useExperimentalAnnotation("net.mamoe.mirai.console.ConsoleFrontEndImplementation")

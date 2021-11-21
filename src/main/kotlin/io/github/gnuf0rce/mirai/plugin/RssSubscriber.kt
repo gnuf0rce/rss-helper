@@ -7,6 +7,7 @@ import io.ktor.http.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.*
 import net.mamoe.mirai.*
+import net.mamoe.mirai.console.util.*
 import net.mamoe.mirai.console.util.ContactUtils.getContact
 import net.mamoe.mirai.console.util.ContactUtils.getContactOrNull
 import net.mamoe.mirai.console.util.CoroutineScopeUtils.childScope
@@ -19,6 +20,7 @@ import java.time.*
 import kotlin.properties.*
 import kotlin.reflect.*
 
+@OptIn(ConsoleExperimentalApi::class)
 object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscriber") {
     private val histories by FeedRecordData::histories
     private val records by SubscribeRecordData::records
