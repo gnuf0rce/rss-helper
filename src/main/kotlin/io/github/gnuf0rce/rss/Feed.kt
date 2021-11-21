@@ -17,7 +17,7 @@ internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { cl
             header(HttpHeaders.Host, url.host)
         }
     } catch (e: Throwable) {
-        when(e) {
+        when (e) {
             is SSLException -> {
                 throw SSLException("Host: ${url.host}, ${e.message}", e)
             }
@@ -29,7 +29,7 @@ internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { cl
     }
 }
 
-class CloudflareException(override val cause: ResponseException): IllegalStateException("Need Cloudflare CAPTCHA", cause)
+class CloudflareException(override val cause: ResponseException) : IllegalStateException("Need Cloudflare CAPTCHA")
 
 private val SystemZoneOffset by lazy { OffsetDateTime.now().offset!! }
 

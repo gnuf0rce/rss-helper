@@ -10,7 +10,7 @@ import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import org.jsoup.*
 
-object RssTestCommand: CompositeCommand(
+object RssTestCommand : CompositeCommand(
     owner = RssHelperPlugin,
     "rss-test", "rss-tools",
     description = "Rss 测试 相关指令",
@@ -32,7 +32,7 @@ object RssTestCommand: CompositeCommand(
     @Description("清空种子文件")
     suspend fun CommandSenderOnMessage<*>.clear(group: Group = fromEvent.subject as Group) = sendMessage {
         group.files.root.files().collect { file ->
-            if (file.uploaderId  == group.bot.id && file.name.endsWith(".torrent")) {
+            if (file.uploaderId == group.bot.id && file.name.endsWith(".torrent")) {
                 file.delete()
             }
         }
