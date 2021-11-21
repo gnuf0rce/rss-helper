@@ -29,16 +29,16 @@ internal val TorrentFolder get() = RssHelperPlugin.dataFolder.resolve("torrent")
 
 internal val client: RssHttpClient by lazy {
     object : RssHttpClient(), RssHttpClientConfig by HttpClientConfig {
-        override val ignore: (Throwable) -> Boolean = {
-            when (it) {
+        override val ignore: (Throwable) -> Boolean = { cause ->
+            when (cause) {
                 is IOException,
                 is HttpRequestTimeoutException -> {
-                    val message = it.message.orEmpty()
-                    if (it is SSLException) {
-                        for ((key, ssl) in RubySSLSocketFactory.logs) {
-                            if (key !in it.message.orEmpty()) {
+                    val message = cause.message.orEmpty()
+                    if (cause is SSLException) {
+                        for ((address, ssl) in RubySSLSocketFactory.logs) {
+                            if (address in cause.message.orEmpty()) {
                                 File("./rss_ssl.log").appendText(buildString {
-                                    appendLine(key + OffsetDateTime.now() + it.message)
+                                    appendLine("$address ${OffsetDateTime.now()} ${cause.message}")
                                     appendLine("protocols: ${ssl.protocols.asList()}")
                                     appendLine("cipherSuites: ${ssl.cipherSuites.asList()}")
                                     appendLine("serverNames: ${ssl.serverNames}")
@@ -48,19 +48,19 @@ internal val client: RssHttpClient by lazy {
                     }
                     when {
                         "Connection reset" in message -> {
-                            logger.warning { "RssHttpClient Ignore，链接被重置，可能需要添加SNI过滤 $it" }
+                            logger.warning { "RssHttpClient Ignore，链接被重置，可能需要添加SNI过滤 $cause" }
                         }
                         "handshake_failure" in message -> {
-                            logger.warning { "RssHttpClient Ignore，握手失败，如果出现频繁，请汇报给开发者 $it" }
+                            logger.warning { "RssHttpClient Ignore，握手失败，如果出现频繁，请汇报给开发者 $cause" }
                         }
                         else -> {
-                            logger.warning { "RssHttpClient Ignore $it" }
+                            logger.warning { "RssHttpClient Ignore $cause" }
                         }
                     }
                     true
                 }
                 is ParsingFeedException -> {
-                    logger.warning { "RssHttpClient Ignore XML解析失败 $it" }
+                    logger.warning { "RssHttpClient Ignore XML解析失败 $cause" }
                     true
                 }
                 else -> {

@@ -261,21 +261,18 @@ private fun SSLContext(tm: X509TrustManager = X509TrustManager()): SSLContext {
 class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocketFactory() {
     companion object {
         private val default: SSLSocketFactory = SSLContext(tm = RubyX509TrustManager).socketFactory
-        private val tls = arrayOf("TLSv1.3", "TLSv1.2", "TLSv1.1")
-        val logs = mutableMapOf<String, SSLParameters>()
+        internal val logs = mutableMapOf<String, SSLParameters>()
     }
 
     private fun Socket.setServerNames(): Socket = apply {
         if (this !is SSLSocket) return@apply
         val key = inetAddress.hostAddress
         sslParameters = sslParameters.apply {
-            protocols = tls
             serverNames = serverNames?.filter { name ->
                 name !is SNIHostName || matcher.none { name.asciiName.matches(it) }
             }
         }
         logs[key] = sslParameters
-        session
         addHandshakeCompletedListener { logs.remove(key) }
     }
 
