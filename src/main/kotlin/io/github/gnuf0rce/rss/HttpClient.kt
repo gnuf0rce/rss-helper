@@ -266,14 +266,14 @@ class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocketFactory(
 
     private fun Socket.setServerNames(): Socket = apply {
         if (this !is SSLSocket) return@apply
-        val key = inetAddress.hostAddress
+        val address = inetAddress.hostAddress
         sslParameters = sslParameters.apply {
             serverNames = serverNames?.filter { name ->
                 name !is SNIHostName || matcher.none { name.asciiName.matches(it) }
             }
         }
-        logs[key] = sslParameters
-        addHandshakeCompletedListener { logs.remove(key) }
+        logs[address] = sslParameters
+        addHandshakeCompletedListener { logs.remove(address) }
     }
 
     override fun createSocket(socket: Socket?, host: String?, port: Int, autoClose: Boolean): Socket? =

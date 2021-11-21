@@ -36,9 +36,9 @@ internal val client: RssHttpClient by lazy {
                     val message = cause.message.orEmpty()
                     if (cause is SSLException) {
                         for ((address, ssl) in RubySSLSocketFactory.logs) {
-                            if (address in cause.message.orEmpty()) {
+                            if (address in message) {
                                 File("./rss_ssl.log").appendText(buildString {
-                                    appendLine("$address ${OffsetDateTime.now()} ${cause.message}")
+                                    appendLine("$address ${OffsetDateTime.now()} $message")
                                     appendLine("protocols: ${ssl.protocols.asList()}")
                                     appendLine("cipherSuites: ${ssl.cipherSuites.asList()}")
                                     appendLine("serverNames: ${ssl.serverNames}")
