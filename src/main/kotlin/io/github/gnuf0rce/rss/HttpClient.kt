@@ -127,9 +127,9 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
         BrowserUserAgent()
         ContentEncoding()
         install(HttpTimeout) {
-            requestTimeoutMillis = timeout
+            socketTimeoutMillis = timeout
             connectTimeoutMillis = timeout
-            socketTimeoutMillis = null
+            requestTimeoutMillis = null
         }
         install(RomeFeature) {
             parser = DefaultRomeParser
