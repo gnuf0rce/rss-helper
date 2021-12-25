@@ -228,9 +228,7 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns {
 
 fun DnsOverHttps(url: String, ipv6: Boolean): DnsOverHttps {
     return DnsOverHttps.Builder()
-        .client(OkHttpClient.Builder()
-            .retryOnConnectionFailure(false)
-            .build())
+        .client(OkHttpClient())
         .url(url.toHttpUrl())
         .post(true)
         .includeIPv6(ipv6)
