@@ -87,20 +87,42 @@ fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
     }
 }
 
-fun SyndEntry.toMessage(subject: Contact?, limit: Int = RssContentConfig.limit) = buildMessageChain {
-    appendKeyValue("标题", title)
-    appendKeyValue("链接", link)
-    appendKeyValue("发布时间", published)
-    appendKeyValue("更新时间", updated.takeIf { it != published })
-    appendKeyValue("分类", categories.map { it.name })
-    appendKeyValue("作者", author)
-    appendKeyValue("种子", torrent)
-    (html?.toMessage(subject) ?: text.orEmpty().toPlainText()).let {
-        if (it.content.length <= limit) {
-            add(it)
-        } else {
-            appendLine("内容过长")
+fun SyndEntry.toMessage(
+    subject: Contact,
+    limit: Int = RssContentConfig.limit,
+    forward: Boolean = RssContentConfig.forward
+): Message {
+    val head = buildMessageChain {
+        appendKeyValue("标题", title)
+        appendKeyValue("链接", link)
+        appendKeyValue("发布时间", published)
+        appendKeyValue("更新时间", updated.takeIf { it != published })
+        appendKeyValue("分类", categories.map { it.name })
+        appendKeyValue("作者", author)
+        appendKeyValue("种子", torrent)
+    }
+
+    val message = html?.toMessage(subject) ?: text.orEmpty().toPlainText()
+
+    return if (forward) {
+        val time = (last ?: OffsetDateTime.now()).toEpochSecond().toInt()
+        buildForwardMessage(subject) {
+            subject.bot at time says head
+            subject.bot at time says message
+
+            displayStrategy = object : ForwardMessage.DisplayStrategy {
+                override fun generatePreview(forward: RawForwardMessage): List<String> {
+                    return listOf(
+                        title,
+                        author,
+                        last.toString(),
+                        categories.joinToString { it.name }
+                    )
+                }
+            }
         }
+    } else {
+        head + if (message.content.length <= limit) message else "内容过长".toPlainText()
     }
 }
 
@@ -138,9 +160,7 @@ internal fun Element.src() = attr("src")
 
 internal fun Element.href() = attr("href")
 
-internal fun Element.image(subject: Contact?): MessageContent = runBlocking {
-    if (subject == null) return@runBlocking " [${src()}] ".toPlainText()
-
+internal fun Element.image(subject: Contact): MessageContent = runBlocking(subject.coroutineContext) {
     try {
         val url = Url(src())
         val image = ImageFolder.resolve(url.filename).apply {
@@ -155,7 +175,7 @@ internal fun Element.image(subject: Contact?): MessageContent = runBlocking {
     }
 }
 
-fun Element.toMessage(subject: Contact?): MessageChain = buildMessageChain {
+fun Element.toMessage(subject: Contact): MessageChain = buildMessageChain {
     NodeTraversor.traverse(object : NodeVisitor {
         override fun head(node: Node, depth: Int) {
             if (node is TextNode) {
