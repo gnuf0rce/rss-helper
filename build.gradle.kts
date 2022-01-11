@@ -47,10 +47,10 @@ repositories {
 kotlin {
     sourceSets {
         all {
-            languageSettings.useExperimentalAnnotation("kotlin.RequiresOptIn")
+            languageSettings.optIn("kotlin.RequiresOptIn")
         }
         test {
-            languageSettings.useExperimentalAnnotation("net.mamoe.mirai.console.ConsoleFrontEndImplementation")
+            languageSettings.optIn("net.mamoe.mirai.console.ConsoleFrontEndImplementation")
         }
     }
 }
