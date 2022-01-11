@@ -38,7 +38,7 @@ mirai {
 
 repositories {
     mavenLocal()
-    maven(url = "https://maven.aliyun.com/repository/public")
+    maven(url = "https://maven.aliyun.com/repository/central")
     mavenCentral()
     maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
     gradlePluginPortal()
@@ -62,12 +62,10 @@ dependencies {
     implementation(ktor("client-serialization", Versions.ktor)) {
         exclude(group = "io.ktor", module = "ktor-client-core")
     }
-    // compileOnly(okhttp3("okhttp", Versions.okhttp))
     implementation(okhttp3("okhttp-dnsoverhttps", Versions.okhttp)) {
         exclude(group = "com.squareup.okhttp3")
     }
     implementation(rome(Versions.rome))
-    // implementation(rome("modules", Versions.rome))
     implementation(jsoup(Versions.jsoup))
     // test
     testImplementation(kotlin("test"))

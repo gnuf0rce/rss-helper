@@ -4,19 +4,14 @@ import io.github.gnuf0rce.mirai.plugin.command.*
 import io.github.gnuf0rce.mirai.plugin.data.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
-import net.mamoe.mirai.console.data.*
 import net.mamoe.mirai.console.plugin.jvm.*
-import net.mamoe.mirai.console.util.*
 
 object RssHelperPlugin : KotlinPlugin(
-    JvmPluginDescription(id = "io.github.gnuf0rce.rss-helper", version = "1.0.9") {
+    JvmPluginDescription(id = "io.github.gnuf0rce.rss-helper", version = "1.1.0") {
         name("rss-helper")
         author("cssxsh")
     }
 ) {
-
-    @OptIn(ConsoleExperimentalApi::class)
-    private fun <T : PluginConfig> T.save() = loader.configStorage.store(this@RssHelperPlugin, this)
 
     override fun onEnable() {
         FeedRecordData.reload()
