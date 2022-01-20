@@ -6,13 +6,24 @@
 [![Downloads](https://img.shields.io/github/downloads/gnuf0rce/rss-helper/total)](https://shields.io/category/downloads)
 [![MiraiForum](https://img.shields.io/badge/post-on%20MiraiForum-yellow)](https://mirai.mamoe.net/topic/334)
 
+**使用前应该查阅的相关文档或项目**
+
+* [User Manual](https://github.com/mamoe/mirai/blob/dev/docs/UserManual.md)
+* [Permission Command](https://github.com/mamoe/mirai/blob/dev/mirai-console/docs/BuiltInCommands.md#permissioncommand)
+* [Chat Command](https://github.com/project-mirai/chat-command)
+
 ## 指令
 
 注意: 使用前请确保可以 [在聊天环境执行指令](https://github.com/project-mirai/chat-command)  
 带括号的`/`前缀是可选的  
 `<...>`中的是指令名，由空格隔开表示或，选择其中任一名称都可执行例如`/rss add https://github.com/cssxsh.atom`  
 `[...]`表示参数，当`[...]`后面带`?`时表示参数可选  
-`{...}`表示连续的多个参数 下列指令的 URL 参数可以使用 base64 编码 后的形式
+`{...}`表示连续的多个参数  
+
+本插件指令权限ID 格式为 `io.github.gnuf0rce.rss-helper:command.*`, `*` 是指令的第一指令名  
+例如 `/rss-mirai other` 的权限ID为 `io.github.gnuf0rce.rss-helper:command.rss-mirai`
+
+下列指令的 URL 参数可以使用 base64 编码 后的形式
 
 ### RssBaseCommand
 
@@ -113,19 +124,19 @@ RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 
 ### RssHubConfig
 
-* domain rsshub 服务器的域名，默认为官方的 rsshub.app
+* `domain` rsshub 服务器的域名，默认为官方的 rsshub.app
 
 ### HttpClientConfig
 
-* doh Dns Over Https Url (为空时关闭Doh，使用系统DNS since 1.0.0-dev-6)
-* sni 需要移除 SNI HostName 的域名的正则表达式列表
-* proxy 代理列表 host: proxy, host=127.0.0.1时是全局代理
-* ipv6 doh 开启ipv6 支持 (since 1.0.3)
+* `doh` Dns Over Https Url (为空时关闭Doh，使用系统DNS since 1.0.0-dev-6)
+* `sni` 需要移除 SNI HostName 的域名的正则表达式列表
+* `proxy` 代理列表 host: proxy, host=127.0.0.1时是全局代理
+* `ipv6` doh 开启ipv6 支持 (since 1.0.3)
 
 ### RssContentConfig
 
-* limit 订阅内容输出到QQ消息的最大长度，超过则只会输出 `内容过长`
-* forward 通过转发消息的形式发送
+* `limit` 订阅内容输出到QQ消息的最大长度，超过则只会输出 `内容过长`
+* `forward` 通过转发消息的形式发送
 
 ## TODO
 
