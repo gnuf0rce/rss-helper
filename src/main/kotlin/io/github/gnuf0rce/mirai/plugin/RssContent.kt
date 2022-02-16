@@ -138,13 +138,13 @@ private val FULLWIDTH_CHARS = mapOf(
     '|' to '｜'
 )
 
-private fun String.toFullWidth(): String = fold("") { acc, char -> acc + (FULLWIDTH_CHARS[char] ?: char) }
+private fun String.fullwidth(): String = fold("") { acc, char -> acc + (FULLWIDTH_CHARS[char] ?: char) }
 
 suspend fun SyndEntry.getTorrent(): File? {
     // TODO magnet to file
     val url = Url(torrent?.takeIf { it.startsWith("http") } ?: return null)
     return try {
-        TorrentFolder.resolve("${title.toFullWidth()}.torrent").apply {
+        TorrentFolder.resolve("${title.fullwidth()}.torrent").apply {
             if (exists().not()) {
                 parentFile.mkdirs()
                 writeBytes(client.useHttpClient { it.get(url) })
