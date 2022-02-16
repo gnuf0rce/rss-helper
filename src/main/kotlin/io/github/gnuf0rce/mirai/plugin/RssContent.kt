@@ -15,7 +15,7 @@ import net.mamoe.mirai.utils.*
 import org.jsoup.nodes.*
 import org.jsoup.select.*
 import java.io.*
-import java.time.OffsetDateTime
+import java.time.*
 import javax.net.ssl.*
 
 internal val logger by lazy {
@@ -87,11 +87,7 @@ fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
     }
 }
 
-fun SyndEntry.toMessage(
-    subject: Contact,
-    limit: Int = RssContentConfig.limit,
-    forward: Boolean = RssContentConfig.forward
-): Message {
+fun SyndEntry.toMessage(subject: Contact, limit: Int, forward: Boolean): Message {
     val head = buildMessageChain {
         appendKeyValue("标题", title)
         appendKeyValue("链接", link)
@@ -105,10 +101,10 @@ fun SyndEntry.toMessage(
     val message = html?.toMessage(subject) ?: text.orEmpty().toPlainText()
 
     return if (forward) {
-        val time = (last ?: OffsetDateTime.now()).toEpochSecond().toInt()
+        val second = (last ?: OffsetDateTime.now()).toEpochSecond().toInt()
         buildForwardMessage(subject) {
-            subject.bot at time says head
-            subject.bot at time says message
+            subject.bot at second says head
+            subject.bot at second says message
 
             displayStrategy = toDisplayStrategy()
         }
@@ -153,14 +149,14 @@ suspend fun SyndEntry.getTorrent(): File? {
             }
         }
     } catch (e: Throwable) {
-        logger.warning({ "下载种子失败, ${e.message}" }, e)
+        logger.warning({ "下载种子失败" }, e)
         null
     }
 }
 
-internal fun Element.src() = attr("src")
+internal fun Element.src(): String = attr("src") ?: throw NoSuchElementException("src")
 
-internal fun Element.href() = attr("href")
+internal fun Element.href(): String = attr("href") ?: throw NoSuchElementException("href")
 
 internal fun Element.image(subject: Contact): MessageContent = runBlocking(subject.coroutineContext) {
     try {
@@ -173,6 +169,7 @@ internal fun Element.image(subject: Contact): MessageContent = runBlocking(subje
         }
         image.uploadAsImage(subject)
     } catch (e: Throwable) {
+        logger.warning({ "上传图片失败, ${src()}" }, e)
         " [${src()}] ".toPlainText()
     }
 }
@@ -195,6 +192,9 @@ fun Element.toMessage(subject: Contact): MessageChain = buildMessageChain {
                         if (node.text() != node.href()) {
                             append(" <${node.href()}> ")
                         }
+                    }
+                    "br" -> {
+                        append("\n")
                     }
                     else -> {
                         //

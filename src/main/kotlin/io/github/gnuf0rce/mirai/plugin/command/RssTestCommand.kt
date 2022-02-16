@@ -4,7 +4,6 @@ import io.github.gnuf0rce.mirai.plugin.*
 import io.github.gnuf0rce.rss.feed
 import io.ktor.client.request.*
 import io.ktor.http.*
-import kotlinx.coroutines.flow.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
@@ -18,8 +17,8 @@ object RssTestCommand : CompositeCommand(
 ) {
     @SubCommand
     @Description("测试一个订阅")
-    suspend fun CommandSenderOnMessage<*>.build(url: Url) = sendMessage {
-        client.feed(url).entries.first().toMessage(fromEvent.subject)
+    suspend fun CommandSenderOnMessage<*>.build(url: Url, forward: Boolean = false) = sendMessage {
+        client.feed(url).entries.first().toMessage(fromEvent.subject, Int.MAX_VALUE, forward)
     }
 
     @SubCommand

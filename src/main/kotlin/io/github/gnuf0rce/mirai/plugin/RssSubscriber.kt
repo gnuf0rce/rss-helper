@@ -19,9 +19,11 @@ import kotlin.properties.*
 import kotlin.reflect.*
 
 object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscriber") {
-    private val histories by FeedRecordData::histories
-    private val records by SubscribeRecordData::records
+    private val histories get() = FeedRecordData.histories
+    private val records get() = SubscribeRecordData.records
     private val mutex = Mutex()
+    private val limit get() = RssContentConfig.limit
+    private val forward get() = RssContentConfig.forward
 
     private var SyndEntry.history by object : ReadWriteProperty<SyndEntry, OffsetDateTime?> {
         override fun getValue(thisRef: SyndEntry, property: KProperty<*>): OffsetDateTime? {
@@ -30,7 +32,7 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
         }
 
         override fun setValue(thisRef: SyndEntry, property: KProperty<*>, value: OffsetDateTime?) {
-            histories[thisRef.uri] = value.orMinimum().toInstant().toEpochMilli() / 1000.0
+            histories[thisRef.uri] = value.orMin().toInstant().toEpochMilli() / 1000.0
         }
     }
 
@@ -73,11 +75,11 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
             try {
                 val feed = client.feed(link)
                 feed.entries
-                    .filter { it.history == null || it.last.orMinimum() > it.history.orMinimum() }
+                    .filter { it.history == null || it.last.orMin() > it.history.orMin() }
                     .forEach { entry ->
-                        logger.info { "${entry.uri}: ${entry.last.orMinimum()} ? ${entry.history}" }
+                        logger.info { "${entry.uri}: ${entry.last.orMin()} over ${entry.history}" }
                         record.sendFile { entry.getTorrent() }
-                        record.sendMessage { contact -> entry.toMessage(contact) }
+                        record.sendMessage { contact -> entry.toMessage(contact, limit, forward) }
                         entry.history = entry.last.orNow()
                     }
             } catch (e: Throwable) {
