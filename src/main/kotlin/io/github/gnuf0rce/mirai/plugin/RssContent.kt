@@ -110,19 +110,21 @@ fun SyndEntry.toMessage(
             subject.bot at time says head
             subject.bot at time says message
 
-            displayStrategy = object : ForwardMessage.DisplayStrategy {
-                override fun generatePreview(forward: RawForwardMessage): List<String> {
-                    return listOf(
-                        title,
-                        author,
-                        last.toString(),
-                        categories.joinToString { it.name }
-                    )
-                }
-            }
+            displayStrategy = toDisplayStrategy()
         }
     } else {
         head + if (message.content.length <= limit) message else "内容过长".toPlainText()
+    }
+}
+
+fun SyndEntry.toDisplayStrategy() = object : ForwardMessage.DisplayStrategy {
+    override fun generatePreview(forward: RawForwardMessage): List<String> {
+        return listOf(
+            title,
+            author,
+            last.toString(),
+            categories.joinToString { it.name }
+        )
     }
 }
 
