@@ -9,8 +9,9 @@ object OffsetDateTimeSerializer : KSerializer<OffsetDateTime> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor(OffsetDateTime::class.qualifiedName!!, PrimitiveKind.LONG)
 
-    override fun deserialize(decoder: Decoder): OffsetDateTime = Instant.ofEpochMilli(decoder.decodeLong())
-        .atOffset(ZoneOffset.UTC).withOffsetSameLocal(OffsetDateTime.now().offset)
+    override fun deserialize(decoder: Decoder): OffsetDateTime {
+        return OffsetDateTime.ofInstant(Instant.ofEpochMilli(decoder.decodeLong()), ZoneId.systemDefault())
+    }
 
     override fun serialize(encoder: Encoder, value: OffsetDateTime) = encoder.encodeLong(value.toEpochSecond() * 1000)
 }
