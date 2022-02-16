@@ -1,13 +1,13 @@
 plugins {
-    kotlin("jvm") version Versions.kotlin
-    kotlin("plugin.serialization") version Versions.kotlin
+    kotlin("jvm") version "1.6.0"
+    kotlin("plugin.serialization") version "1.6.0"
 
-    id("net.mamoe.mirai-console") version Versions.mirai
-    id("net.mamoe.maven-central-publish") version "0.7.0"
+    id("net.mamoe.mirai-console") version "2.10.0"
+    id("net.mamoe.maven-central-publish") version "0.7.1"
 }
 
 group = "io.github.gnuf0rce"
-version = "1.1.0"
+version = "1.1.1"
 
 mavenCentralPublish {
     useCentralS01()
@@ -19,28 +19,14 @@ mavenCentralPublish {
 }
 
 mirai {
-    jvmTarget = JavaVersion.VERSION_11
     configureShadow {
-        exclude {
-            it.path.startsWith("kotlin")
-        }
-        exclude {
-            it.path.startsWith("org/intellij")
-        }
-        exclude {
-            it.path.startsWith("org/jetbrains")
-        }
-        exclude {
-            it.path.startsWith("org/slf4j")
-        }
+        exclude("module-info.class")
     }
 }
 
 repositories {
     mavenLocal()
-    maven(url = "https://maven.aliyun.com/repository/central")
     mavenCentral()
-    maven(url = "https://maven.aliyun.com/repository/gradle-plugin")
     gradlePluginPortal()
 }
 
@@ -56,19 +42,30 @@ kotlin {
 }
 
 dependencies {
-    implementation(ktor("client-encoding", Versions.ktor)) {
+    implementation("io.ktor:ktor-client-encoding:1.6.5") {
+        exclude(group = "org.jetbrains.kotlin")
+        exclude(group = "org.jetbrains.kotlinx")
+        exclude(group = "org.slf4j")
         exclude(group = "io.ktor", module = "ktor-client-core")
     }
-    implementation(ktor("client-serialization", Versions.ktor)) {
+    implementation("io.ktor:ktor-client-serialization:1.6.5") {
+        exclude(group = "org.jetbrains.kotlin")
+        exclude(group = "org.jetbrains.kotlinx")
+        exclude(group = "org.slf4j")
         exclude(group = "io.ktor", module = "ktor-client-core")
     }
-    implementation(okhttp3("okhttp-dnsoverhttps", Versions.okhttp)) {
+    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.2") {
+        exclude(group = "org.jetbrains.kotlin")
         exclude(group = "com.squareup.okhttp3")
     }
-    implementation(rome(Versions.rome))
-    implementation(jsoup(Versions.jsoup))
+    implementation("com.rometools:rome:1.18.0") {
+        exclude(group = "org.slf4j")
+    }
+    implementation("org.jsoup:jsoup:1.14.3")
+    compileOnly("net.mamoe:mirai-core:2.10.0")
+    compileOnly("net.mamoe:mirai-core-utils:2.10.0")
     // test
-    testImplementation(kotlin("test"))
+    testImplementation(kotlin("test", "1.6.0"))
 }
 
 tasks {

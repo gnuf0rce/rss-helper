@@ -8,9 +8,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.*
 import net.mamoe.mirai.*
 import net.mamoe.mirai.console.util.*
-import net.mamoe.mirai.console.util.ContactUtils.getContact
 import net.mamoe.mirai.console.util.ContactUtils.getContactOrNull
-import net.mamoe.mirai.console.util.CoroutineScopeUtils.childScope
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.*
@@ -20,7 +18,6 @@ import java.time.*
 import kotlin.properties.*
 import kotlin.reflect.*
 
-@OptIn(ConsoleExperimentalApi::class)
 object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscriber") {
     private val histories by FeedRecordData::histories
     private val records by SubscribeRecordData::records
@@ -36,6 +33,7 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
         }
     }
 
+    @OptIn(ConsoleExperimentalApi::class)
     private suspend fun SubscribeRecord.sendMessage(block: suspend (Contact) -> Message) {
         for (id in contacts) {
             runCatching {
@@ -50,11 +48,12 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
         }
     }
 
+    @OptIn(ConsoleExperimentalApi::class)
     private suspend fun SubscribeRecord.sendFile(block: suspend () -> File?) {
         val file = block() ?: return
         for (id in contacts) {
             runCatching {
-                Bot.instances.first { it.getContactOrNull(id) != null }.getContact(id)
+                Bot.instances.firstNotNullOfOrNull { it.getContactOrNull(id) }
             }.onFailure {
                 logger.warning({ "查找联系人${id}失败" }, it)
             }.mapCatching { contact ->
