@@ -31,11 +31,11 @@ internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { cl
 
 class CloudflareException(override val cause: ResponseException) : IllegalStateException("Need Cloudflare CAPTCHA")
 
-private val SystemZoneOffset by lazy { OffsetDateTime.now().offset!! }
+private fun Date.toOffsetDateTime(): OffsetDateTime = OffsetDateTime.ofInstant(toInstant(), ZoneId.systemDefault())
 
-private fun Date.toOffsetDateTime() = toInstant().atOffset(SystemZoneOffset)
-
-internal fun timestamp(second: Long) = Instant.ofEpochSecond(second).atOffset(SystemZoneOffset)
+internal fun timestamp(mills: Long): OffsetDateTime {
+    return OffsetDateTime.ofInstant(Instant.ofEpochMilli(mills), ZoneId.systemDefault())
+}
 
 internal fun OffsetDateTime?.orMinimum(): OffsetDateTime = this ?: OffsetDateTime.MIN
 

@@ -25,11 +25,12 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
 
     private var SyndEntry.history by object : ReadWriteProperty<SyndEntry, OffsetDateTime?> {
         override fun getValue(thisRef: SyndEntry, property: KProperty<*>): OffsetDateTime? {
-            return histories[thisRef.uri]?.let(::timestamp)
+            val second = histories[thisRef.uri] ?: return null
+            return timestamp(mills = (second * 1000).toLong())
         }
 
         override fun setValue(thisRef: SyndEntry, property: KProperty<*>, value: OffsetDateTime?) {
-            histories[thisRef.uri] = value.orMinimum().toEpochSecond()
+            histories[thisRef.uri] = value.orMinimum().toInstant().toEpochMilli() / 1000.0
         }
     }
 
