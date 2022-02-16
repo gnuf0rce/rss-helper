@@ -17,7 +17,7 @@ data class SubscribeRecord(
 
 object FeedRecordData : AutoSavePluginData("FeedRecordData") {
     @ValueDescription("流记录")
-    val histories by value(mutableMapOf<String, Long>())
+    val histories by value<MutableMap<String, Long>>()
 }
 
 object SubscribeRecordData : AutoSavePluginConfig("SubscribeRecordData") {
