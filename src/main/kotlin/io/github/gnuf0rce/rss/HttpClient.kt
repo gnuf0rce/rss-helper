@@ -1,6 +1,5 @@
 package io.github.gnuf0rce.rss
 
-import com.rometools.rome.feed.synd.*
 import com.rometools.rome.io.*
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -8,17 +7,11 @@ import io.ktor.client.features.*
 import io.ktor.client.features.compression.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.util.*
-import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.errors.*
-import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
-import okhttp3.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.dnsoverhttps.*
 import okhttp3.internal.*
@@ -28,44 +21,6 @@ import java.security.*
 import java.security.cert.*
 import javax.net.ssl.*
 
-class RomeFeature internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
-
-    data class Config(
-        var accept: MutableList<ContentType> = mutableListOf(
-            ContentType.Text.Xml,
-            ContentType.Application.Xml,
-            ContentType.Application.Atom,
-            ContentType.Application.Rss,
-        ),
-        var parser: () -> SyndFeedInput = { SyndFeedInput() }
-    )
-
-    constructor(config: Config) : this(config.accept, config.parser)
-
-    companion object Feature : HttpClientFeature<Config, RomeFeature> {
-        override val key: AttributeKey<RomeFeature> = AttributeKey("Rome")
-
-        override fun prepare(block: Config.() -> Unit): RomeFeature = RomeFeature(Config().apply(block))
-
-        override fun install(feature: RomeFeature, scope: HttpClient) {
-            scope.requestPipeline.intercept(HttpRequestPipeline.Transform) {
-                for (type in feature.accept) context.accept(type)
-            }
-
-            scope.responsePipeline.intercept(HttpResponsePipeline.Parse) { (info, body) ->
-                if (body !is ByteReadChannel) return@intercept
-
-                if (!info.type.java.isAssignableFrom(SyndFeed::class.java)) return@intercept
-
-                if (!feature.accept.any { context.response.contentType()?.match(it) == true }) return@intercept
-
-                val reader = body.toInputStream().reader(context.response.charset() ?: Charsets.UTF_8)
-                val parsed = feature.parser().build(reader)
-                proceedWith(HttpResponseContainer(info, parsed))
-            }
-        }
-    }
-}
 
 const val DefaultDnsOverHttps = "https://public.dns.iij.jp/dns-query"
 
@@ -189,10 +144,10 @@ fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySel
     override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) = Unit
 }
 
-fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns {
-    val dns = (if (doh.isNotBlank()) DnsOverHttps(doh, ipv6) else Dns.SYSTEM)
+fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): okhttp3.Dns {
+    val dns = (if (doh.isNotBlank()) DnsOverHttps(doh, ipv6) else okhttp3.Dns.SYSTEM)
 
-    return object : Dns {
+    return object : okhttp3.Dns {
 
         private val lookup: (String) -> List<InetAddress> = {
             if (it.canParseAsIpAddress()) InetAddress.getAllByName(it).asList() else dns.lookup(it)
@@ -228,7 +183,7 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns {
 
 fun DnsOverHttps(url: String, ipv6: Boolean): DnsOverHttps {
     return DnsOverHttps.Builder()
-        .client(OkHttpClient())
+        .client(okhttp3.OkHttpClient())
         .url(url.toHttpUrl())
         .post(true)
         .includeIPv6(ipv6)
