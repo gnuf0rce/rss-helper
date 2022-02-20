@@ -178,7 +178,7 @@ fun Element.toMessage(subject: Contact): MessageChain = buildMessageChain {
     NodeTraversor.traverse(object : NodeVisitor {
         override fun head(node: Node, depth: Int) {
             if (node is TextNode) {
-                append(node.wholeText)
+                append(node.wholeText.removePrefix("\n\t").removeSuffix("\n"))
             }
         }
 
@@ -189,8 +189,10 @@ fun Element.toMessage(subject: Contact): MessageChain = buildMessageChain {
                         append(node.image(subject))
                     }
                     "a" -> {
-                        if (node.text() != node.href()) {
-                            append(" <${node.href()}> ")
+                        when {
+                            node.text() == node.href() -> Unit
+                            node.childrenSize() > 0 -> Unit
+                            else -> append("<${node.href()}>")
                         }
                     }
                     "br" -> {

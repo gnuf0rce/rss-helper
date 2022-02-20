@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.gnuf0rce"
-version = "1.1.1"
+version = "1.1.2"
 
 mavenCentralPublish {
     useCentralS01()
@@ -62,6 +62,7 @@ dependencies {
         exclude(group = "org.slf4j")
     }
     implementation("org.jsoup:jsoup:1.14.3")
+    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
     compileOnly("net.mamoe:mirai-core:2.10.0")
     compileOnly("net.mamoe:mirai-core-utils:2.10.0")
     // test
