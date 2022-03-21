@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version "1.6.0"
     kotlin("plugin.serialization") version "1.6.0"
 
-    id("net.mamoe.mirai-console") version "2.10.0"
+    id("net.mamoe.mirai-console") version "2.10.1"
     id("net.mamoe.maven-central-publish") version "0.7.1"
 }
 
@@ -18,16 +18,9 @@ mavenCentralPublish {
     }
 }
 
-mirai {
-    configureShadow {
-        exclude("module-info.class")
-    }
-}
-
 repositories {
     mavenLocal()
     mavenCentral()
-    gradlePluginPortal()
 }
 
 kotlin {
@@ -63,8 +56,8 @@ dependencies {
     }
     implementation("org.jsoup:jsoup:1.14.3")
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
-    compileOnly("net.mamoe:mirai-core:2.10.0")
-    compileOnly("net.mamoe:mirai-core-utils:2.10.0")
+    compileOnly("net.mamoe:mirai-core:2.10.1")
+    compileOnly("net.mamoe:mirai-core-utils:2.10.1")
     // test
     testImplementation(kotlin("test", "1.6.0"))
 }

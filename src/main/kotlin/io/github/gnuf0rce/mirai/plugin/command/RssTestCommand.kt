@@ -5,6 +5,7 @@ import io.github.gnuf0rce.rss.feed
 import io.ktor.client.request.*
 import io.ktor.http.*
 import net.mamoe.mirai.console.command.*
+import net.mamoe.mirai.console.util.ContactUtils.render
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import org.jsoup.*
@@ -35,6 +36,6 @@ object RssTestCommand : CompositeCommand(
                 file.delete()
             }
         }
-        "${group}清空种子文件完毕".toPlainText()
+        "${group.render()}清空种子文件完毕".toPlainText()
     }
 }
