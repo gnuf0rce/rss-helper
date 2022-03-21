@@ -4,8 +4,12 @@ import com.rometools.rome.feed.synd.*
 import com.rometools.rome.io.*
 import io.github.gnuf0rce.mirai.plugin.data.*
 import io.github.gnuf0rce.rss.*
+import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.utils.io.*
+import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
@@ -65,7 +69,11 @@ internal val client: RssHttpClient by lazy {
     }
 }
 
-private val Url.filename get() = encodedPath.substringAfterLast('/')
+private val Url.filename get() = encodedPath.substringAfterLast('/').decodeURLPart()
+
+private fun HttpMessage.contentDisposition(): ContentDisposition? {
+    return ContentDisposition.parse(headers[HttpHeaders.ContentDisposition] ?: return null)
+}
 
 fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
     when (value) {
@@ -154,10 +162,27 @@ internal fun Element.href(): String = attr("href") ?: throw NoSuchElementExcepti
 internal fun Element.image(subject: Contact): MessageContent = runBlocking(subject.coroutineContext) {
     try {
         val url = Url(src())
-        val image = ImageFolder.resolve(url.filename).apply {
-            if (exists().not()) {
-                parentFile.mkdirs()
-                writeBytes(client.useHttpClient { it.get(url) })
+
+        val image = if (ImageFolder.resolve(url.filename).exists()) {
+            ImageFolder.resolve(url.filename)
+        } else {
+            client.useHttpClient { http ->
+                http.get<HttpStatement>(url).execute { response ->
+                    val relative = response.contentDisposition()?.parameter(ContentDisposition.Parameters.FileName)
+                        ?: response.request.url.filename
+
+                    val file = ImageFolder.resolve(relative)
+
+                    file.outputStream().use { output ->
+                        val channel: ByteReadChannel = response.receive()
+
+                        while (!channel.isClosedForRead) {
+                            channel.copyTo(output)
+                        }
+                    }
+
+                    file
+                }
             }
         }
         image.uploadAsImage(subject)
