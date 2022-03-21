@@ -4,7 +4,6 @@ import com.rometools.rome.feed.synd.*
 import com.rometools.rome.io.*
 import io.github.gnuf0rce.mirai.plugin.data.*
 import io.github.gnuf0rce.rss.*
-import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
@@ -15,6 +14,7 @@ import net.mamoe.mirai.utils.*
 import org.jsoup.nodes.*
 import org.jsoup.select.*
 import java.io.*
+import java.net.*
 import java.time.*
 import javax.net.ssl.*
 
@@ -31,30 +31,23 @@ internal val client: RssHttpClient by lazy {
     object : RssHttpClient(), RssHttpClientConfig by HttpClientConfig {
         override val ignore: (Throwable) -> Boolean = { cause ->
             when (cause) {
-                is IOException,
-                is HttpRequestTimeoutException -> {
+                is IOException -> {
+                    logger.warning { "RssHttpClient Ignore $cause" }
+                    true
+                }
+                is UnknownHostException -> {
+                    true
+                }
+                is SSLException -> {
                     val message = cause.message.orEmpty()
-                    if (cause is SSLException) {
-                        for ((address, ssl) in RubySSLSocketFactory.logs) {
-                            if (address in message) {
-                                File("./rss_ssl.log").appendText(buildString {
-                                    appendLine("$address ${OffsetDateTime.now()} $message")
-                                    appendLine("protocols: ${ssl.protocols.asList()}")
-                                    appendLine("cipherSuites: ${ssl.cipherSuites.asList()}")
-                                    appendLine("serverNames: ${ssl.serverNames}")
-                                })
-                            }
-                        }
-                    }
-                    when {
-                        "Connection reset" in message -> {
-                            logger.warning { "RssHttpClient Ignore，链接被重置，可能需要添加SNI过滤 $cause" }
-                        }
-                        "handshake_failure" in message -> {
-                            logger.warning { "RssHttpClient Ignore，握手失败，如果出现频繁，请汇报给开发者 $cause" }
-                        }
-                        else -> {
-                            logger.warning { "RssHttpClient Ignore $cause" }
+                    for ((address, ssl) in RubySSLSocketFactory.logs) {
+                        if (address in message) {
+                            File("./rss_ssl.log").appendText(buildString {
+                                appendLine("$address ${OffsetDateTime.now()} $message")
+                                appendLine("protocols: ${ssl.protocols.asList()}")
+                                appendLine("cipherSuites: ${ssl.cipherSuites.asList()}")
+                                appendLine("serverNames: ${ssl.serverNames}")
+                            })
                         }
                     }
                     true
