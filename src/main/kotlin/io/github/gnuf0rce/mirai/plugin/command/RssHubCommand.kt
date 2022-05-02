@@ -18,11 +18,11 @@ object RssHubCommand : CompositeCommand(
     overrideContext = RssCommandArgumentContext
 ) {
 
-    private val domain by RssHubConfig::domain
+    private val baseUrl get() = Url(RssHubConfig.host)
 
     @OptIn(ExperimentalSerializationApi::class)
     private suspend fun routes(): RssHubRoutes {
-        return Json.decodeFromString(client.useHttpClient { it.get("https://${domain}/api/routes") })
+        return Json.decodeFromString(client.useHttpClient { it.get(baseUrl.copy(encodedPath = "api/routes")) })
     }
 
     @SubCommand
@@ -66,7 +66,7 @@ object RssHubCommand : CompositeCommand(
             }
         }.joinToString(separator = "/", prefix = "")
 
-        val (name) = RssSubscriber.add(Url("https://${domain}${path}"), fromEvent.subject)
-        "RSS订阅任务[${name}]已添加".toPlainText()
+        val record = RssSubscriber.add(baseUrl.copy(encodedPath = path), fromEvent.subject)
+        "RSS订阅任务[${record.name}]已添加".toPlainText()
     }
 }

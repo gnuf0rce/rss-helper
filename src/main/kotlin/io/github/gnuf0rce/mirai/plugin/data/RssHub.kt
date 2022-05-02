@@ -5,7 +5,7 @@ import net.mamoe.mirai.console.data.*
 
 object RssHubConfig : ReadOnlyPluginConfig("RssHubConfig") {
     @ValueDescription("RssHub域名，默认为官方源")
-    val domain by value("rsshub.app")
+    val host by value("https://rsshub.app:443")
 }
 
 @Serializable

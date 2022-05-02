@@ -124,7 +124,8 @@ RSS订阅任务[秋元真夏(乃木坂46) - 755]已添加
 
 ### RssHubConfig
 
-* `domain` rsshub 服务器的域名，默认为官方的 rsshub.app
+* `domain` ~~rsshub 服务器的域名，默认为官方的 rsshub.app~~ 此配置废除
+* `host` rsshub 服务器，默认为官方的 <https://rsshub.app:443>
 
 ### HttpClientConfig
 
