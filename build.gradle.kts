@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.gnuf0rce"
-version = "1.1.3"
+version = "1.1.4"
 
 mavenCentralPublish {
     useCentralS01()
@@ -27,9 +27,6 @@ kotlin {
     sourceSets {
         all {
             languageSettings.optIn("kotlin.RequiresOptIn")
-        }
-        test {
-            languageSettings.optIn("net.mamoe.mirai.console.ConsoleFrontEndImplementation")
         }
     }
 }
