@@ -10,7 +10,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
-import kotlinx.coroutines.*
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
@@ -88,7 +87,7 @@ fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
     }
 }
 
-fun SyndEntry.toMessage(subject: Contact, limit: Int, forward: Boolean): Message {
+suspend fun SyndEntry.toMessage(subject: Contact, limit: Int, forward: Boolean): Message {
     val head = buildMessageChain {
         appendKeyValue("标题", title)
         appendKeyValue("链接", link)
@@ -159,10 +158,9 @@ internal fun Element.src(): String = attr("src") ?: throw NoSuchElementException
 
 internal fun Element.href(): String = attr("href") ?: throw NoSuchElementException("href")
 
-internal fun Element.image(subject: Contact): MessageContent = runBlocking(subject.coroutineContext) {
-    try {
-        val url = Url(src())
-
+internal suspend fun Element.image(subject: Contact): MessageContent {
+    val url = Url(src())
+    return try {
         val image = if (ImageFolder.resolve(url.filename).exists()) {
             ImageFolder.resolve(url.filename)
         } else {
@@ -187,40 +185,45 @@ internal fun Element.image(subject: Contact): MessageContent = runBlocking(subje
         }
         image.uploadAsImage(subject)
     } catch (e: Throwable) {
-        logger.warning({ "上传图片失败, ${src()}" }, e)
-        " [${src()}] ".toPlainText()
+        logger.warning({ "上传图片失败, $url" }, e)
+        " [$url] ".toPlainText()
     }
 }
 
-fun Element.toMessage(subject: Contact): MessageChain = buildMessageChain {
-    NodeTraversor.traverse(object : NodeVisitor {
+suspend fun Element.toMessage(subject: Contact): MessageChain {
+    val visitor = object : NodeVisitor, MutableList<Node> by ArrayList() {
         override fun head(node: Node, depth: Int) {
-            if (node is TextNode) {
-                append(node.wholeText.removePrefix("\n\t").removeSuffix("\n"))
-            }
+            if (node is TextNode) add(node)
         }
 
         override fun tail(node: Node, depth: Int) {
-            if (node is Element) {
-                when (node.nodeName()) {
-                    "img" -> {
-                        append(node.image(subject))
-                    }
-                    "a" -> {
-                        when {
-                            node.text() == node.href() -> Unit
-                            node.childrenSize() > 0 -> Unit
-                            else -> append("<${node.href()}>")
-                        }
-                    }
-                    "br" -> {
-                        append("\n")
-                    }
-                    else -> {
-                        //
+            if (node is Element) add(node)
+        }
+    }
+    NodeTraversor.traverse(visitor, this)
+
+    val builder = MessageChainBuilder()
+    visitor.forEach { node ->
+        when (node) {
+            is TextNode -> builder.append(node.wholeText.removePrefix("\n\t").removeSuffix("\n"))
+            is Element -> when (node.nodeName()) {
+                "img" -> {
+                    builder.append(node.image(subject))
+                }
+                "a" -> {
+                    when {
+                        node.text() == node.href() -> Unit
+                        node.childrenSize() > 0 -> Unit
+                        else -> builder.append("<${node.href()}>")
                     }
                 }
+                "br" -> {
+                    builder.append("\n")
+                }
             }
+            else -> error(node)
         }
-    }, this@toMessage)
+    }
+
+    return builder.build()
 }
