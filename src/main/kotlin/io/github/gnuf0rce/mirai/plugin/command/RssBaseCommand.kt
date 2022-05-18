@@ -25,7 +25,7 @@ object RssBaseCommand : CompositeCommand(
     suspend fun CommandSenderOnMessage<*>.list() = sendMessage {
         RssSubscriber.list(fromEvent.subject).entries.joinToString("\n") { (url, record) ->
             val base64 = url.toString().encode().base64()
-            "[${record.name}](${base64})"
+            "[${record.name}](${base64})<${record.interval}>"
         }.ifBlank { "列表为空" }.toPlainText()
     }
 
