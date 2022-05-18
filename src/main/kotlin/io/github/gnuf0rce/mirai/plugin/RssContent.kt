@@ -171,11 +171,14 @@ internal suspend fun Element.image(subject: Contact): MessageContent {
 
                     val file = ImageFolder.resolve(relative)
 
-                    file.outputStream().use { output ->
-                        val channel: ByteReadChannel = response.receive()
+                    if (file.exists().not()) {
+                        file.mkdirs()
+                        file.outputStream().use { output ->
+                            val channel: ByteReadChannel = response.receive()
 
-                        while (!channel.isClosedForRead) {
-                            channel.copyTo(output)
+                            while (!channel.isClosedForRead) {
+                                channel.copyTo(output)
+                            }
                         }
                     }
 
