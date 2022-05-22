@@ -1,4 +1,4 @@
-package io.github.gnuf0rce.mirai.plugin.data
+package io.github.gnuf0rce.mirai.rss.data
 
 import io.github.gnuf0rce.rss.*
 import net.mamoe.mirai.console.data.PluginDataExtensions.mapKeys

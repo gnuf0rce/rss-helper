@@ -1,8 +1,8 @@
-package io.github.gnuf0rce.mirai.plugin
+package io.github.gnuf0rce.mirai.rss
 
 import com.rometools.rome.feed.synd.*
 import com.rometools.rome.io.*
-import io.github.gnuf0rce.mirai.plugin.data.*
+import io.github.gnuf0rce.mirai.rss.data.*
 import io.github.gnuf0rce.rss.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*

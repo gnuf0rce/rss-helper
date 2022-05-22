@@ -1,7 +1,7 @@
-package io.github.gnuf0rce.mirai.plugin.command
+package io.github.gnuf0rce.mirai.rss.command
 
-import io.github.gnuf0rce.mirai.plugin.*
-import io.github.gnuf0rce.mirai.plugin.data.*
+import io.github.gnuf0rce.mirai.rss.*
+import io.github.gnuf0rce.mirai.rss.data.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
