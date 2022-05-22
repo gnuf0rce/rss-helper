@@ -1,13 +1,13 @@
 plugins {
-    kotlin("jvm") version "1.6.0"
-    kotlin("plugin.serialization") version "1.6.0"
+    kotlin("jvm") version "1.6.21"
+    kotlin("plugin.serialization") version "1.6.21"
 
-    id("net.mamoe.mirai-console") version "2.10.1"
+    id("net.mamoe.mirai-console") version "2.11.0"
     id("net.mamoe.maven-central-publish") version "0.7.1"
 }
 
 group = "io.github.gnuf0rce"
-version = "1.1.4"
+version = "1.2.0"
 
 mavenCentralPublish {
     useCentralS01()
@@ -15,6 +15,7 @@ mavenCentralPublish {
     licenseFromGitHubProject("AGPL-3.0", "master")
     publication {
         artifact(tasks.getByName("buildPlugin"))
+        artifact(tasks.getByName("buildPluginLegacy"))
     }
 }
 
@@ -23,28 +24,20 @@ repositories {
     mavenCentral()
 }
 
-kotlin {
-    sourceSets {
-        all {
-            languageSettings.optIn("kotlin.RequiresOptIn")
-        }
-    }
-}
-
 dependencies {
-    implementation("io.ktor:ktor-client-encoding:1.6.5") {
+    implementation("io.ktor:ktor-client-encoding:1.6.7") {
         exclude(group = "org.jetbrains.kotlin")
         exclude(group = "org.jetbrains.kotlinx")
         exclude(group = "org.slf4j")
         exclude(group = "io.ktor", module = "ktor-client-core")
     }
-    implementation("io.ktor:ktor-client-serialization:1.6.5") {
+    implementation("io.ktor:ktor-client-serialization:1.6.7") {
         exclude(group = "org.jetbrains.kotlin")
         exclude(group = "org.jetbrains.kotlinx")
         exclude(group = "org.slf4j")
         exclude(group = "io.ktor", module = "ktor-client-core")
     }
-    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.2") {
+    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.3") {
         exclude(group = "org.jetbrains.kotlin")
         exclude(group = "com.squareup.okhttp3")
     }
@@ -53,10 +46,10 @@ dependencies {
     }
     implementation("org.jsoup:jsoup:1.14.3")
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
-    compileOnly("net.mamoe:mirai-core:2.10.1")
-    compileOnly("net.mamoe:mirai-core-utils:2.10.1")
+    compileOnly("net.mamoe:mirai-core:2.11.0")
+    compileOnly("net.mamoe:mirai-core-utils:2.11.0")
     // test
-    testImplementation(kotlin("test", "1.6.0"))
+    testImplementation(kotlin("test", "1.6.21"))
 }
 
 tasks {
