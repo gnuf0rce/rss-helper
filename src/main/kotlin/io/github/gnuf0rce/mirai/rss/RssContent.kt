@@ -68,9 +68,9 @@ internal val client: RssHttpClient by lazy {
     }
 }
 
-private val Url.filename get() = encodedPath.substringAfterLast('/').decodeURLPart()
+internal val Url.filename get() = encodedPath.substringAfterLast('/').decodeURLPart()
 
-private fun HttpMessage.contentDisposition(): ContentDisposition? {
+internal fun HttpMessage.contentDisposition(): ContentDisposition? {
     return ContentDisposition.parse(headers[HttpHeaders.ContentDisposition] ?: return null)
 }
 
@@ -167,12 +167,14 @@ internal suspend fun Element.image(subject: Contact): MessageContent {
             client.useHttpClient { http ->
                 http.get<HttpStatement>(url).execute { response ->
                     val relative = response.contentDisposition()?.parameter(ContentDisposition.Parameters.FileName)
+                        ?: response.etag()?.removeSurrounding("\"")
+                            ?.plus(".")?.plus(response.contentType()?.contentSubtype)
                         ?: response.request.url.filename
 
                     val file = ImageFolder.resolve(relative)
 
                     if (file.exists().not()) {
-                        file.mkdirs()
+                        file.parentFile.mkdirs()
                         file.outputStream().use { output ->
                             val channel: ByteReadChannel = response.receive()
 
