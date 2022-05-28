@@ -61,7 +61,9 @@ object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscrib
                 logger.warning({ "查找联系人${id}失败" }, it)
             }.mapCatching { contact ->
                 if (contact !is FileSupported) return@mapCatching
-                file.toExternalResource().use { contact.files.uploadNewFile(file.name, it) }
+                file.toExternalResource().use { resource ->
+                    contact.files.root.createFolder(file.extension).uploadNewFile(file.name, resource)
+                }
             }.onFailure {
                 logger.warning({ "向${id}发送文件失败" }, it)
             }

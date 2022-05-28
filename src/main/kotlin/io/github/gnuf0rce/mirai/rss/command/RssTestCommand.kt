@@ -31,11 +31,7 @@ object RssTestCommand : CompositeCommand(
     @SubCommand
     @Description("清空种子文件")
     suspend fun CommandSenderOnMessage<*>.clear(group: Group = fromEvent.subject as Group) = sendMessage {
-        group.files.root.files().collect { file ->
-            if (file.uploaderId == group.bot.id && file.name.endsWith(".torrent")) {
-                file.delete()
-            }
-        }
+        group.files.root.createFolder("torrent").files().collect { file -> file.delete() }
         "${group.render()}清空种子文件完毕".toPlainText()
     }
 }
