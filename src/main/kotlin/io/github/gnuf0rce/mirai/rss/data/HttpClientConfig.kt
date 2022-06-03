@@ -1,10 +1,14 @@
 package io.github.gnuf0rce.mirai.rss.data
 
 import io.github.gnuf0rce.rss.*
-import net.mamoe.mirai.console.data.PluginDataExtensions.mapKeys
+import kotlinx.serialization.modules.*
 import net.mamoe.mirai.console.data.*
 
 object HttpClientConfig : ReadOnlyPluginConfig("HttpClientConfig"), RssHttpClientConfig {
+    override val serializersModule: SerializersModule = SerializersModule {
+        contextual(RegexSerializer)
+    }
+
     @ValueDescription("Dns Over Https Url")
     override val doh: String by value(DefaultDnsOverHttps)
 
@@ -13,8 +17,7 @@ object HttpClientConfig : ReadOnlyPluginConfig("HttpClientConfig"), RssHttpClien
 
     @ValueName("sni")
     @ValueDescription("SNI HostName Remove Regex")
-    private val sni_: List<String> by value(DefaultSNIHosts.map { it.pattern })
-    override val sni: List<Regex> by lazy { sni_.map { it.toRegex() } }
+    override val sni: List<Regex> by value(DefaultSNIHosts)
 
     @ValueDescription("Http Timeout")
     override val timeout: Long by value(DefaultTimeout)
@@ -23,6 +26,5 @@ object HttpClientConfig : ReadOnlyPluginConfig("HttpClientConfig"), RssHttpClien
     override val proxy: Map<String, String> by value(DefaultProxy)
 
     @ValueDescription("DNS CNAME")
-    override val cname: Map<Regex, List<String>> by value(DefaultCNAME.mapKeys { it.key.toString() })
-        .mapKeys(::Regex, ""::plus)
+    override val cname: Map<Regex, List<String>> by value(DefaultCNAME)
 }
