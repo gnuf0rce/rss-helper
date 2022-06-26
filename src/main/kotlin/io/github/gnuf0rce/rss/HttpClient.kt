@@ -3,11 +3,11 @@ package io.github.gnuf0rce.rss
 import com.rometools.rome.io.*
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
-import io.ktor.client.features.*
-import io.ktor.client.features.compression.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.compression.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.core.*
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
@@ -89,8 +89,8 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
         install(RomeFeature) {
             parser = DefaultRomeParser
         }
-        Json {
-            serializer = KotlinxSerializer(DefaultRssJson)
+        install(ContentNegotiation) {
+            json(json = DefaultRssJson)
         }
         engine {
             config {

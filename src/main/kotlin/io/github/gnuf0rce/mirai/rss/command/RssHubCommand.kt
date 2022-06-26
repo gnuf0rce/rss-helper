@@ -2,11 +2,11 @@ package io.github.gnuf0rce.mirai.rss.command
 
 import io.github.gnuf0rce.mirai.rss.*
 import io.github.gnuf0rce.mirai.rss.data.*
+import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.*
-import kotlinx.serialization.json.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.*
@@ -18,11 +18,16 @@ object RssHubCommand : CompositeCommand(
     overrideContext = RssCommandArgumentContext
 ) {
 
-    private val baseUrl get() = Url(RssHubConfig.host)
-
     @OptIn(ExperimentalSerializationApi::class)
     private suspend fun routes(): RssHubRoutes {
-        return Json.decodeFromString(client.useHttpClient { it.get(baseUrl.copy(encodedPath = "api/routes")) })
+        return client.useHttpClient { http ->
+            http.get {
+                url {
+                    takeFrom(RssHubConfig.host)
+                    encodedPath = "api/routes"
+                }
+            }.body()
+        }
     }
 
     @SubCommand
@@ -41,7 +46,7 @@ object RssHubCommand : CompositeCommand(
             route.routes.single()
         }
         var stop = false
-        val path = link.split("/").mapNotNull {
+        val paths = link.split("/").mapNotNull {
             if (stop) return@mapNotNull null
             if (it.startsWith(":")) {
                 lateinit var value: String
@@ -64,9 +69,12 @@ object RssHubCommand : CompositeCommand(
             } else {
                 it
             }
-        }.joinToString(separator = "/", prefix = "")
+        }
 
-        val record = RssSubscriber.add(baseUrl.copy(encodedPath = path), fromEvent.subject)
+        val url = URLBuilder(RssHubConfig.host)
+            .appendPathSegments(paths)
+            .build()
+        val record = RssSubscriber.add(url, fromEvent.subject)
         "RSS订阅任务[${record.name}]已添加".toPlainText()
     }
 }

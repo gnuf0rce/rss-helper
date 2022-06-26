@@ -3,7 +3,7 @@ package io.github.gnuf0rce.rss
 import com.rometools.rome.feed.synd.*
 import com.rometools.rome.io.*
 import io.ktor.client.*
-import io.ktor.client.features.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -25,14 +25,14 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
 
     constructor(config: Config) : this(config.accept, config.parser)
 
-    companion object Feature : HttpClientFeature<Config, RomeFeature> {
+    companion object Feature : HttpClientPlugin<Config, RomeFeature> {
         override val key: AttributeKey<RomeFeature> = AttributeKey("Rome")
 
         override fun prepare(block: Config.() -> Unit): RomeFeature = RomeFeature(Config().apply(block))
 
-        override fun install(feature: RomeFeature, scope: HttpClient) {
+        override fun install(plugin: RomeFeature, scope: HttpClient) {
             scope.requestPipeline.intercept(HttpRequestPipeline.Transform) {
-                for (type in feature.accept) context.accept(type)
+                for (type in plugin.accept) context.accept(type)
             }
 
             scope.responsePipeline.intercept(HttpResponsePipeline.Parse) { (info, body) ->
@@ -40,10 +40,10 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
 
                 if (!info.type.java.isAssignableFrom(SyndFeed::class.java)) return@intercept
 
-                if (!feature.accept.any { context.response.contentType()?.match(it) == true }) return@intercept
+                if (!plugin.accept.any { context.response.contentType()?.match(it) == true }) return@intercept
 
                 val reader = body.toInputStream().reader(context.response.charset() ?: Charsets.UTF_8)
-                val parsed = feature.parser().build(reader)
+                val parsed = plugin.parser().build(reader)
                 proceedWith(HttpResponseContainer(info, parsed))
             }
         }

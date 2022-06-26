@@ -25,21 +25,33 @@ repositories {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-client-encoding:1.6.7") {
+    implementation("io.ktor:ktor-client-core:2.0.2") {
         exclude(group = "org.jetbrains.kotlin")
         exclude(group = "org.jetbrains.kotlinx")
         exclude(group = "org.slf4j")
-        exclude(group = "io.ktor", module = "ktor-client-core")
     }
-    implementation("io.ktor:ktor-client-serialization:1.6.7") {
+    implementation("io.ktor:ktor-client-okhttp:2.0.2") {
         exclude(group = "org.jetbrains.kotlin")
         exclude(group = "org.jetbrains.kotlinx")
         exclude(group = "org.slf4j")
-        exclude(group = "io.ktor", module = "ktor-client-core")
     }
-    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.9.3") {
+    implementation("io.ktor:ktor-client-encoding:2.0.2") {
         exclude(group = "org.jetbrains.kotlin")
-        exclude(group = "com.squareup.okhttp3")
+        exclude(group = "org.jetbrains.kotlinx")
+        exclude(group = "org.slf4j")
+    }
+    implementation("io.ktor:ktor-client-content-negotiation:2.0.2") {
+        exclude(group = "org.jetbrains.kotlin")
+        exclude(group = "org.jetbrains.kotlinx")
+        exclude(group = "org.slf4j")
+    }
+    implementation("io.ktor:ktor-serialization-kotlinx-json:2.0.2") {
+        exclude(group = "org.jetbrains.kotlin")
+        exclude(group = "org.jetbrains.kotlinx")
+        exclude(group = "org.slf4j")
+    }
+    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.10.0") {
+        exclude(group = "org.jetbrains.kotlin")
     }
     implementation("com.rometools:rome:1.18.0") {
         exclude(group = "org.slf4j")

@@ -2,6 +2,7 @@ package io.github.gnuf0rce.mirai.rss.command
 
 import io.github.gnuf0rce.mirai.rss.*
 import io.github.gnuf0rce.rss.feed
+import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import net.mamoe.mirai.console.command.*
@@ -24,7 +25,9 @@ object RssTestCommand : CompositeCommand(
 
     @SubCommand
     suspend fun CommandSender.ssl() {
-        val html = Jsoup.parse(client.useHttpClient { it.get("https://ssl.haka.se/") })
+        val html = Jsoup.parse(client.useHttpClient { http ->
+            http.get("https://ssl.haka.se/").body()
+        })
         sendMessage(html.wholeText())
     }
 

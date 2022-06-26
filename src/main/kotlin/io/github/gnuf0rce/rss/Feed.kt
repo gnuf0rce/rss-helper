@@ -1,7 +1,8 @@
 package io.github.gnuf0rce.rss
 
 import com.rometools.rome.feed.synd.*
-import io.ktor.client.features.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jsoup.parser.*
@@ -10,11 +11,11 @@ import java.util.*
 import javax.net.ssl.*
 import kotlin.properties.*
 
-internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { client ->
+internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { http ->
     try {
-        client.get(url) {
+        http.get(url) {
             header(HttpHeaders.Host, url.host)
-        }
+        }.body()
     } catch (cause: Throwable) {
         throw when (cause) {
             is SSLException -> {

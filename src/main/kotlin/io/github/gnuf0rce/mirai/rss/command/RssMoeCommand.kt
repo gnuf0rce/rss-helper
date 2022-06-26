@@ -1,14 +1,14 @@
 package io.github.gnuf0rce.mirai.rss.command
 
 import io.github.gnuf0rce.mirai.rss.*
+import io.ktor.client.call.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import kotlinx.serialization.json.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
-import java.io.*
+import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 
 object RssMoeCommand : CompositeCommand(
     owner = RssHelperPlugin,
@@ -20,26 +20,30 @@ object RssMoeCommand : CompositeCommand(
 
     private val ID_REGEX = """[a-z0-9]{24}""".toRegex()
 
-    private suspend fun search(name: String): BangumiTag = client.useHttpClient {
-        it.post("https://bangumi.moe/api/tag/search") {
-            body = buildJsonObject {
+    private suspend fun search(name: String): BangumiTag = client.useHttpClient { http ->
+        http.post("https://bangumi.moe/api/tag/search") {
+            setBody(body = buildJsonObject {
                 put("keywords", true)
                 put("multi", true)
                 put("name", name)
-            }
+            })
             contentType(ContentType.Application.Json)
-        }
+        }.body()
     }
 
-    private suspend fun recent(): List<BangumiRecent> = client.useHttpClient {
-        it.get("https://bangumi.moe/api/bangumi/recent")
+    private suspend fun recent(): List<BangumiRecent> = client.useHttpClient { http ->
+        http.get("https://bangumi.moe/api/bangumi/recent").body()
     }
 
     private suspend fun BangumiRecent.cover(contact: Contact): Message {
         return try {
-            client.useHttpClient { it.get<InputStream>("https://bangumi.moe/$cover") }.uploadAsImage(contact)
-        } catch (e: Throwable) {
-            "封面下载失败 $e".toPlainText()
+            client.useHttpClient { http ->
+                http.get("https://bangumi.moe/$cover").body<ByteArray>()
+            }.toExternalResource().use { resource ->
+                contact.uploadImage(resource)
+            }
+        } catch (cause: Throwable) {
+            "封面下载失败 $cause".toPlainText()
         }
     }
 

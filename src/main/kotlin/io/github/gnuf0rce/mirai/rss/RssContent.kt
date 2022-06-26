@@ -148,7 +148,7 @@ suspend fun SyndEntry.getTorrent(): File? {
         TorrentFolder.resolve("${title.fullwidth()}.torrent").apply {
             if (exists().not()) {
                 parentFile.mkdirs()
-                writeBytes(client.useHttpClient { it.get(url) })
+                writeBytes(client.useHttpClient { it.get(url).body() })
             }
         }
     } catch (e: Throwable) {
@@ -168,27 +168,26 @@ internal suspend fun Element.image(subject: Contact): MessageContent {
             ImageFolder.resolve(url.filename)
         } else {
             client.useHttpClient { http ->
-                http.get<HttpStatement>(url).execute { response ->
-                    val relative = response.contentDisposition()?.parameter(ContentDisposition.Parameters.FileName)
-                        ?: response.etag()?.removeSurrounding("\"")
-                            ?.plus(".")?.plus(response.contentType()?.contentSubtype)
-                        ?: response.request.url.filename
+                val response = http.get(url)
+                val relative = response.contentDisposition()?.parameter(ContentDisposition.Parameters.FileName)
+                    ?: response.etag()?.removeSurrounding("\"")
+                        ?.plus(".")?.plus(response.contentType()?.contentSubtype)
+                    ?: response.request.url.filename
 
-                    val file = ImageFolder.resolve(relative)
+                val file = ImageFolder.resolve(relative)
 
-                    if (file.exists().not()) {
-                        file.parentFile.mkdirs()
-                        file.outputStream().use { output ->
-                            val channel: ByteReadChannel = response.receive()
+                if (file.exists().not()) {
+                    file.parentFile.mkdirs()
+                    file.outputStream().use { output ->
+                        val channel: ByteReadChannel = response.bodyAsChannel()
 
-                            while (!channel.isClosedForRead) {
-                                channel.copyTo(output)
-                            }
+                        while (!channel.isClosedForRead) {
+                            channel.copyTo(output)
                         }
                     }
-
-                    file
                 }
+
+                file
             }
         }
         image.uploadAsImage(subject)
