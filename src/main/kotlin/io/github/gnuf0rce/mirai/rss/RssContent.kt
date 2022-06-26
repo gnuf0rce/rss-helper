@@ -22,8 +22,11 @@ import java.time.*
 import javax.net.ssl.*
 
 internal val logger by lazy {
-    val open = System.getProperty("io.github.gnuf0rce.mirai.plugin.logger", "${true}").toBoolean()
-    if (open) RssHelperPlugin.logger else SilentLogger
+    try {
+        RssHelperPlugin.logger
+    } catch (_: Throwable) {
+        MiraiLogger.Factory.create(RssHttpClient::class)
+    }
 }
 
 internal val ImageFolder get() = RssHelperPlugin.dataFolder.resolve("image")
