@@ -92,6 +92,7 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
         install(ContentNegotiation) {
             json(json = DefaultRssJson)
         }
+        expectSuccess = true
         engine {
             config {
                 // connectionPool(ConnectionPool(5, 30, TimeUnit.SECONDS))
