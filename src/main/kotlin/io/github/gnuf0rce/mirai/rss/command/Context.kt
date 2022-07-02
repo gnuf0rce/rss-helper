@@ -1,20 +1,24 @@
 package io.github.gnuf0rce.mirai.rss.command
 
 import io.ktor.http.*
+import io.ktor.util.*
 import kotlinx.coroutines.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.descriptor.*
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.data.MessageSource.Key.quote
-import okio.ByteString.Companion.decodeBase64
 
 val RssCommandArgumentContext = buildCommandArgumentContext {
     Url::class with { raw, _ ->
         try {
-            Url(raw.decodeBase64()?.utf8() ?: raw)
-        } catch (e: Throwable) {
-            throw CommandArgumentParserException("无法解析${raw}为URL", e)
+            if (raw.startsWith("http")) {
+                Url(raw)
+            } else {
+                Url(raw.decodeBase64String())
+            }
+        } catch (cause: Throwable) {
+            throw CommandArgumentParserException("无法解析${raw}为URL", cause)
         }
     }
 }

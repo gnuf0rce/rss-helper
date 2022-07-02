@@ -2,9 +2,9 @@ package io.github.gnuf0rce.mirai.rss.command
 
 import io.github.gnuf0rce.mirai.rss.*
 import io.ktor.http.*
+import io.ktor.util.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.message.data.*
-import okio.ByteString.Companion.encode
 
 object RssBaseCommand : CompositeCommand(
     owner = RssHelperPlugin,
@@ -24,7 +24,7 @@ object RssBaseCommand : CompositeCommand(
     @Description("列出订阅列表")
     suspend fun CommandSenderOnMessage<*>.list() = sendMessage {
         RssSubscriber.list(fromEvent.subject).entries.joinToString("\n") { (url, record) ->
-            val base64 = url.toString().encode().base64()
+            val base64 = url.toString().encodeBase64()
             "[${record.name}](${base64})<${record.interval}>"
         }.ifBlank { "列表为空" }.toPlainText()
     }
