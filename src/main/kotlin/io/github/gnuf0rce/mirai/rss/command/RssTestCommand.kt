@@ -19,8 +19,17 @@ object RssTestCommand : CompositeCommand(
 ) {
     @SubCommand
     @Description("测试一个订阅")
-    suspend fun CommandSenderOnMessage<*>.build(url: Url, forward: Boolean = false) = sendMessage {
-        client.feed(url).entries.first().toMessage(fromEvent.subject, Int.MAX_VALUE, forward)
+    suspend fun CommandSender.build(url: Url, forward: Boolean = false) {
+        val feed = client.feed(url)
+        if (feed.entries.isNullOrEmpty()) {
+            sendMessage("结果为空".toPlainText())
+        } else {
+            if (subject != null) {
+                feed.entries.first().toMessage(subject!!, Int.MAX_VALUE, forward)
+            } else {
+                sendMessage(feed.entries.first().title)
+            }
+        }
     }
 
     @SubCommand
