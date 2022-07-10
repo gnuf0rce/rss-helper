@@ -11,7 +11,7 @@ import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
 
-class RomeFeature internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
+class RomePlugin internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
 
     data class Config(
         var accept: MutableList<ContentType> = mutableListOf(
@@ -25,12 +25,12 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
 
     constructor(config: Config) : this(config.accept, config.parser)
 
-    companion object Feature : HttpClientPlugin<Config, RomeFeature> {
-        override val key: AttributeKey<RomeFeature> = AttributeKey("Rome")
+    companion object Plugin : HttpClientPlugin<Config, RomePlugin> {
+        override val key: AttributeKey<RomePlugin> = AttributeKey("Rome")
 
-        override fun prepare(block: Config.() -> Unit): RomeFeature = RomeFeature(Config().apply(block))
+        override fun prepare(block: Config.() -> Unit): RomePlugin = RomePlugin(Config().apply(block))
 
-        override fun install(plugin: RomeFeature, scope: HttpClient) {
+        override fun install(plugin: RomePlugin, scope: HttpClient) {
             scope.requestPipeline.intercept(HttpRequestPipeline.Transform) {
                 for (type in plugin.accept) context.accept(type)
             }
@@ -40,10 +40,13 @@ class RomeFeature internal constructor(val accept: List<ContentType>, val parser
 
                 if (!info.type.java.isAssignableFrom(SyndFeed::class.java)) return@intercept
 
-                if (!plugin.accept.any { context.response.contentType()?.match(it) == true }) return@intercept
+                val type = context.response.contentType() ?: ContentType.Any
+                val charset = context.response.charset() ?: Charsets.UTF_8
+                if (plugin.accept.none { type.match(it) }) return@intercept
 
-                val reader = body.toInputStream().reader(context.response.charset() ?: Charsets.UTF_8)
-                val parsed = plugin.parser().build(reader)
+                val parsed = body.toInputStream()
+                    .reader(charset)
+                    .use { plugin.parser().build(it) }
                 proceedWith(HttpResponseContainer(info, parsed))
             }
         }
