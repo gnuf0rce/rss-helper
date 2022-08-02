@@ -59,6 +59,10 @@ dependencies {
     testImplementation(kotlin("test", "1.6.21"))
 }
 
+mirai {
+    jvmTarget = JavaVersion.VERSION_11
+}
+
 tasks {
     test {
         useJUnitPlatform()
