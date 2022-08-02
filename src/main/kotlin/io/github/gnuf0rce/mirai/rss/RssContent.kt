@@ -37,10 +37,6 @@ internal val client: RssHttpClient by lazy {
     object : RssHttpClient(), RssHttpClientConfig by HttpClientConfig {
         override val ignore: (Throwable) -> Boolean = { cause ->
             when (cause) {
-                is IOException -> {
-                    logger.warning { "RssHttpClient Ignore $cause" }
-                    true
-                }
                 is UnknownHostException -> {
                     true
                 }
@@ -58,8 +54,12 @@ internal val client: RssHttpClient by lazy {
                     }
                     true
                 }
+                is IOException -> {
+                    logger.warning({ "RssHttpClient IOException" }, cause)
+                    true
+                }
                 is ParsingFeedException -> {
-                    logger.warning { "RssHttpClient Ignore XML解析失败 $cause" }
+                    logger.warning({ "RssHttpClient XML解析失败" }, cause)
                     true
                 }
                 else -> {
