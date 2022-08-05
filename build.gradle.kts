@@ -3,7 +3,7 @@ plugins {
     kotlin("plugin.serialization") version "1.7.10"
 
     id("net.mamoe.mirai-console") version "2.12.1"
-    id("net.mamoe.maven-central-publish") version "0.7.1"
+    id("me.him188.maven-central-publish") version "1.0.0-dev-3"
 }
 
 group = "io.github.gnuf0rce"
@@ -13,6 +13,8 @@ mavenCentralPublish {
     useCentralS01()
     singleDevGithubProject("gnuf0rce", "rss-helper", "cssxsh")
     licenseFromGitHubProject("AGPL-3.0", "master")
+    workingDir = System.getenv("PUBLICATION_TEMP")?.let { file(it).resolve(projectName) }
+        ?: project.buildDir.resolve("publishing-tmp")
     publication {
         artifact(tasks.getByName("buildPlugin"))
     }
@@ -55,7 +57,7 @@ dependencies {
     compileOnly("net.mamoe:mirai-core:2.12.1")
     compileOnly("net.mamoe:mirai-core-utils:2.12.1")
     // test
-    testImplementation(kotlin("test", "1.7.0"))
+    testImplementation(kotlin("test"))
 }
 
 mirai {
