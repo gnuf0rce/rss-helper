@@ -52,7 +52,7 @@ dependencies {
     implementation("com.rometools:rome:1.18.0") {
         exclude(group = "org.slf4j")
     }
-    implementation("org.jsoup:jsoup:1.14.3")
+    implementation("org.jsoup:jsoup:1.15.2")
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
     compileOnly("net.mamoe:mirai-core:2.12.1")
     compileOnly("net.mamoe:mirai-core-utils:2.12.1")
