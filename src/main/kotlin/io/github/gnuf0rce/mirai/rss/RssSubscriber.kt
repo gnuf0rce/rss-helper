@@ -15,10 +15,17 @@ import net.mamoe.mirai.utils.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import java.io.File
 import java.time.*
+import kotlin.coroutines.*
 import kotlin.properties.*
 import kotlin.reflect.*
 
-object RssSubscriber : CoroutineScope by RssHelperPlugin.childScope("RssSubscriber") {
+object RssSubscriber : CoroutineScope {
+
+    override val coroutineContext: CoroutineContext =
+        CoroutineName(name = "RssSubscriber") + SupervisorJob() + CoroutineExceptionHandler { context, throwable ->
+            logger.warning({ "$throwable in $context" }, throwable)
+        }
+
     private val histories get() = FeedRecordData.histories
     private val records get() = SubscribeRecordData.records
     private val mutex = Mutex()
