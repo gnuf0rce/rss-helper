@@ -24,35 +24,35 @@ object RssGithubCommand : CompositeCommand(
 
     @SubCommand
     @Description("添加一个Releases订阅")
-    suspend fun CommandSenderOnMessage<*>.releases(owner: String, repo: String) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.releases(owner: String, repo: String) = quote {
         val (name) = RssSubscriber.add(Releases(owner, repo), fromEvent.subject)
         "Releases($owner/$repo)订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
     @Description("添加一个Commits订阅")
-    suspend fun CommandSenderOnMessage<*>.commits(owner: String, repo: String) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.commits(owner: String, repo: String) = quote {
         val (name) = RssSubscriber.add(Commits(owner, repo), fromEvent.subject)
         "Commits($owner/$repo)订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
     @Description("添加一个Tags订阅")
-    suspend fun CommandSenderOnMessage<*>.tags(owner: String, repo: String) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.tags(owner: String, repo: String) = quote {
         val (name) = RssSubscriber.add(Tags(owner, repo), fromEvent.subject)
         "Tags($owner/$repo)订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
     @Description("添加一个Activity订阅")
-    suspend fun CommandSenderOnMessage<*>.activity(user: String) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.activity(user: String) = quote {
         val (name) = RssSubscriber.add(Activity(user), fromEvent.subject)
         "Activity($user)订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
     @Description("添加一个Private订阅")
-    suspend fun CommandSenderOnMessage<*>.private(user: String, secret: String) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.private(user: String, secret: String) = quote {
         val (name) = RssSubscriber.add(Private(user, secret), fromEvent.subject)
         "Private($user)订阅任务[${name}]已添加".toPlainText()
     }

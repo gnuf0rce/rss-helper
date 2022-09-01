@@ -15,7 +15,7 @@ object RssMiraiCommand : CompositeCommand(
 
     @SubCommand
     @Description("添加标签订阅")
-    suspend fun CommandSenderOnMessage<*>.category(value: Int) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.category(value: Int) = quote {
         val (name) = RssSubscriber.add(Category(value), fromEvent.subject)
         "MiraiForum订阅任务[${name}]已添加".toPlainText()
     }

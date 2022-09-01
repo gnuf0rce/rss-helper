@@ -22,28 +22,28 @@ object RssMikanCommand : CompositeCommand(
 
     @SubCommand
     @Description("添加一个MyBangumi订阅")
-    suspend fun CommandSenderOnMessage<*>.my(token: String) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.my(token: String) = quote {
         val (name) = RssSubscriber.add(MyBangumi(token), fromEvent.subject)
         "MyBangumi($token)订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
     @Description("添加一个Classic订阅")
-    suspend fun CommandSenderOnMessage<*>.classic() = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.classic() = quote {
         val (name) = RssSubscriber.add(Classic, fromEvent.subject)
         "Classic订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
     @Description("添加一个Bangumi订阅")
-    suspend fun CommandSenderOnMessage<*>.bangumi(id: Int, sub: Int? = null) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.bangumi(id: Int, sub: Int? = null) = quote {
         val (name) = RssSubscriber.add(Bangumi(id, sub), fromEvent.subject)
         "Bangumi($id by $sub)订阅任务[${name}]已添加".toPlainText()
     }
 
     @SubCommand
     @Description("添加一个Search订阅")
-    suspend fun CommandSenderOnMessage<*>.search(word: String) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.search(word: String) = quote {
         val (name) = RssSubscriber.add(Search(word), fromEvent.subject)
         "Search($word)订阅任务[${name}]已添加".toPlainText()
     }

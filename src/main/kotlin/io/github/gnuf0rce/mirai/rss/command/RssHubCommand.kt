@@ -32,7 +32,7 @@ object RssHubCommand : CompositeCommand(
 
     @SubCommand
     @Description("添加一个RssHub订阅")
-    suspend fun CommandSenderOnMessage<*>.add() = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.add() = quote {
         val routes = routes()
         sendMessage(routes.message)
         sendMessage("请输入路由名")

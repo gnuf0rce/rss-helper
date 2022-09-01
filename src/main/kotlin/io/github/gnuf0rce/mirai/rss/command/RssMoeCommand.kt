@@ -49,7 +49,7 @@ object RssMoeCommand : CompositeCommand(
 
     @SubCommand
     @Description("查看当季番剧TAG")
-    suspend fun CommandSenderOnMessage<*>.recent() = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.recent() = quote {
         buildMessageChain {
             for (item in this@RssMoeCommand.recent()) {
                 appendLine("<=====================>")
@@ -62,7 +62,7 @@ object RssMoeCommand : CompositeCommand(
 
     @SubCommand
     @Description("搜索TAG")
-    suspend fun CommandSenderOnMessage<*>.search(name: String) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.search(name: String) = quote {
         buildMessageChain {
             val list = this@RssMoeCommand.search(name).tag
             if (list.isEmpty()) {
@@ -79,7 +79,7 @@ object RssMoeCommand : CompositeCommand(
 
     @SubCommand
     @Description("添加一个Tags订阅")
-    suspend fun CommandSenderOnMessage<*>.tags(vararg ids: String) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.tags(vararg ids: String) = quote {
         check(ids.isNotEmpty()) { "ids 为空" }
         for (id in ids) check(id matches ID_REGEX) { "$id Not Matches ${ID_REGEX.pattern}" }
         val (name) = RssSubscriber.add(moe(ids.asList()), fromEvent.subject)

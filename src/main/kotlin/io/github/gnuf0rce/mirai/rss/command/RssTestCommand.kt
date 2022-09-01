@@ -42,7 +42,7 @@ object RssTestCommand : CompositeCommand(
 
     @SubCommand
     @Description("清空种子文件")
-    suspend fun CommandSenderOnMessage<*>.clear(group: Group = fromEvent.subject as Group) = sendMessage {
+    suspend fun CommandSenderOnMessage<*>.clear(group: Group = fromEvent.subject as Group) = quote {
         group.files.root.createFolder("torrent").files().collect { file -> file.delete() }
         "${group.render()}清空种子文件完毕".toPlainText()
     }
