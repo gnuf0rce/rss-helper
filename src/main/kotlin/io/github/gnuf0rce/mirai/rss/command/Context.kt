@@ -17,7 +17,7 @@ val RssCommandArgumentContext = buildCommandArgumentContext {
             } else {
                 Url(raw.decodeBase64String())
             }
-        } catch (cause: Throwable) {
+        } catch (cause: Exception) {
             throw CommandArgumentParserException("无法解析${raw}为URL", cause)
         }
     }

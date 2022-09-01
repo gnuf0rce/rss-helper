@@ -16,7 +16,7 @@ internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { ht
         http.get(url) {
             header(HttpHeaders.Host, url.host)
         }.body()
-    } catch (cause: Throwable) {
+    } catch (cause: Exception) {
         throw when (cause) {
             is SSLException -> {
                 SSLException("Host: ${url.host}, ${cause.message}", cause)

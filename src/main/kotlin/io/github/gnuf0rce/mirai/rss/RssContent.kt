@@ -24,7 +24,7 @@ import javax.net.ssl.*
 internal val logger by lazy {
     try {
         RssHelperPlugin.logger
-    } catch (_: Throwable) {
+    } catch (_: Exception) {
         MiraiLogger.Factory.create(RssHttpClient::class)
     }
 }
@@ -151,8 +151,8 @@ suspend fun SyndEntry.getTorrent(): File? {
                 writeBytes(client.useHttpClient { it.get(url).body() })
             }
         }
-    } catch (e: Throwable) {
-        logger.warning({ "下载种子失败" }, e)
+    } catch (cause: Exception) {
+        logger.warning({ "下载种子失败" }, cause)
         null
     }
 }
@@ -191,8 +191,8 @@ internal suspend fun Element.image(subject: Contact): MessageContent {
             }
         }
         image.uploadAsImage(subject)
-    } catch (e: Throwable) {
-        logger.warning({ "上传图片失败, $url" }, e)
+    } catch (cause: Exception) {
+        logger.warning({ "上传图片失败, $url" }, cause)
         " [$url] ".toPlainText()
     }
 }

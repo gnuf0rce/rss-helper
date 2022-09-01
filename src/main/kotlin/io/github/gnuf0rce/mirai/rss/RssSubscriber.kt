@@ -7,8 +7,7 @@ import io.ktor.http.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.*
 import net.mamoe.mirai.*
-import net.mamoe.mirai.console.util.*
-import net.mamoe.mirai.console.util.ContactUtils.getContactOrNull
+import net.mamoe.mirai.console.util.ContactUtils.render
 import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.*
@@ -43,36 +42,58 @@ object RssSubscriber : CoroutineScope {
         }
     }
 
-    @OptIn(ConsoleExperimentalApi::class)
+    private fun contact(id: Long): Contact {
+        for (bot in Bot.instances) {
+            for (friend in bot.friends) {
+                if (friend.id == id) return friend
+            }
+            for (group in bot.groups) {
+                if (group.id == id) return group
+
+                for (member in group.members) {
+                    if (member.id == id) return member
+                }
+            }
+        }
+        throw NoSuchElementException("Contact(${id})")
+    }
+
     private suspend fun SubscribeRecord.sendMessage(block: suspend (Contact) -> Message) {
         for (id in contacts) {
-            runCatching {
-                Bot.instances.firstNotNullOf { it.getContactOrNull(id) }
-            }.onFailure {
-                logger.warning({ "查找联系人${id}失败" }, it)
-            }.mapCatching { contact ->
-                contact.sendMessage(block(contact))
-            }.onFailure {
-                logger.warning({ "向${id}发送消息失败" }, it)
+            val contact = try {
+                contact(id = id)
+            } catch (cause: Exception) {
+                logger.warning({ "查找联系人${id}失败" }, cause)
+                continue
+            }
+
+            try {
+                contact.sendMessage(message = block(contact))
+            } catch (cause: Exception) {
+                logger.warning({ "向 ${contact.render()} 发送消息失败" }, cause)
+                continue
             }
         }
     }
 
-    @OptIn(ConsoleExperimentalApi::class)
     private suspend fun SubscribeRecord.sendFile(block: suspend () -> File?) {
         val file = block() ?: return
         for (id in contacts) {
-            runCatching {
-                Bot.instances.firstNotNullOfOrNull { it.getContactOrNull(id) }
-            }.onFailure {
-                logger.warning({ "查找联系人${id}失败" }, it)
-            }.mapCatching { contact ->
-                if (contact !is FileSupported) return@mapCatching
+            val contact = try {
+                contact(id = id)
+            } catch (cause: Exception) {
+                logger.warning({ "查找联系人${id}失败" }, cause)
+                continue
+            }
+
+            if (contact !is FileSupported) continue
+
+            try {
                 file.toExternalResource().use { resource ->
                     contact.files.root.createFolder(file.extension).uploadNewFile(file.name, resource)
                 }
-            }.onFailure {
-                logger.warning({ "向${id}发送文件失败" }, it)
+            } catch (cause: Exception) {
+                logger.warning({ "向 ${contact.render()} 发送文件失败" }, cause)
             }
         }
     }
@@ -91,8 +112,8 @@ object RssSubscriber : CoroutineScope {
                         record.sendMessage { contact -> entry.toMessage(contact, limit, forward) }
                         entry.history = entry.last.orNow()
                     }
-            } catch (e: Throwable) {
-                logger.warning({ "Rss: $link" }, e)
+            } catch (cause: Exception) {
+                logger.warning({ "Rss: $link" }, cause)
             }
         }
     }

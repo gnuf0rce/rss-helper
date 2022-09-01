@@ -42,7 +42,7 @@ object RssMoeCommand : CompositeCommand(
             }.toExternalResource().use { resource ->
                 contact.uploadImage(resource)
             }
-        } catch (cause: Throwable) {
+        } catch (cause: Exception) {
             "封面下载失败 $cause".toPlainText()
         }
     }

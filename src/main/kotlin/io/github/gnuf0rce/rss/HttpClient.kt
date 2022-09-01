@@ -68,7 +68,6 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
                 false
             }
             is IOException,
-            is HttpRequestTimeoutException,
             is FeedException -> {
                 true
             }
@@ -114,20 +113,22 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
 
     suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = supervisorScope {
         var count = 0
+        var current: Exception? = null
         while (isActive) {
             try {
                 return@supervisorScope block(client)
-            } catch (throwable: Throwable) {
-                if (isActive && ignore(throwable)) {
+            } catch (cause: Exception) {
+                current = cause
+                if (isActive && ignore(cause)) {
                     if (++count > max) {
-                        throw throwable
+                        throw cause
                     }
                 } else {
-                    throw throwable
+                    throw cause
                 }
             }
         }
-        throw CancellationException(null, null)
+        throw CancellationException(null, current)
     }
 }
 
@@ -161,7 +162,7 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): okhttp3.Dn
             for (item in other) {
                 try {
                     result.addAll(item.let(lookup))
-                } catch (e: Throwable) {
+                } catch (_: Exception) {
                     //
                 }
             }
@@ -169,7 +170,7 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): okhttp3.Dn
             if (result.isEmpty()) {
                 try {
                     result.addAll(hostname.let(lookup))
-                } catch (e: Throwable) {
+                } catch (_: Exception) {
                     //
                 }
             }
