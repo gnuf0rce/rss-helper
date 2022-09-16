@@ -113,11 +113,11 @@ open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
 
     suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = supervisorScope {
         var count = 0
-        var current: Exception? = null
+        var current: Throwable? = null
         while (isActive) {
             try {
                 return@supervisorScope block(client)
-            } catch (cause: Exception) {
+            } catch (cause: Throwable) {
                 current = cause
                 if (isActive && ignore(cause)) {
                     if (++count > max) {

@@ -24,7 +24,7 @@ import javax.net.ssl.*
 internal val logger by lazy {
     try {
         RssHelperPlugin.logger
-    } catch (_: Exception) {
+    } catch (_: ExceptionInInitializerError) {
         MiraiLogger.Factory.create(RssHttpClient::class)
     }
 }
