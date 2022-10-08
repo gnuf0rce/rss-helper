@@ -139,7 +139,11 @@ private val FULLWIDTH_CHARS = mapOf(
     '|' to '｜'
 )
 
-private fun String.fullwidth(): String = fold("") { acc, char -> acc + (FULLWIDTH_CHARS[char] ?: char) }
+private fun CharSequence.fullwidth(): String {
+    return fold(StringBuilder()) { buffer, char ->
+        buffer.append(FULLWIDTH_CHARS[char] ?: char)
+    }.toString()
+}
 
 suspend fun SyndEntry.getTorrent(): File? {
     // TODO magnet to file
