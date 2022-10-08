@@ -45,7 +45,7 @@ internal val SyndEntry.published get() = publishedDate?.toOffsetDateTime()
 
 internal val SyndEntry.updated get() = updatedDate?.toOffsetDateTime()
 
-internal val SyndEntry.last get() = updated ?: published
+internal val SyndEntry.last get() = (updatedDate ?: publishedDate)?.toOffsetDateTime()
 
 private fun ContentType(value: String?): ContentType {
     if (value == null) return ContentType.Text.Plain

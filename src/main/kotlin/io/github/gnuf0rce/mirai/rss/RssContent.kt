@@ -104,7 +104,7 @@ suspend fun SyndEntry.toMessage(subject: Contact, limit: Int, forward: Boolean):
     val message = html?.toMessage(subject) ?: text.orEmpty().toPlainText()
 
     return if (forward) {
-        val second = (last ?: OffsetDateTime.now()).toEpochSecond().toInt()
+        val second = last.orNow().toEpochSecond().toInt()
         buildForwardMessage(subject) {
             subject.bot at second says head
             subject.bot at second says message
