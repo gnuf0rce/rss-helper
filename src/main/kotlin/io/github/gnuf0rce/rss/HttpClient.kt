@@ -13,6 +13,7 @@ import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Dns
 import okhttp3.dnsoverhttps.*
 import okhttp3.internal.*
 import okhttp3.internal.tls.*
@@ -146,40 +147,40 @@ fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySel
     override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) = Unit
 }
 
-fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): okhttp3.Dns {
-    val dns = (if (doh.isNotBlank()) DnsOverHttps(doh, ipv6) else okhttp3.Dns.SYSTEM)
+fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns = object : Dns {
+    val dns = if (doh.isNotBlank()) DnsOverHttps(doh, ipv6) else null
 
-    return object : okhttp3.Dns {
+    override fun lookup(hostname: String): List<InetAddress> = buildList {
+        val other = cname.flatMap { (regex, list) -> if (regex in hostname) list else emptyList() }
 
-        private val lookup: (String) -> List<InetAddress> = {
-            if (it.canParseAsIpAddress()) InetAddress.getAllByName(it).asList() else dns.lookup(it)
+        for (item in other) {
+            try {
+                val result = if (item.canParseAsIpAddress()) {
+                    Dns.SYSTEM.lookup(item)
+                } else {
+                    (dns ?: Dns.SYSTEM).lookup(item)
+                }
+                addAll(result)
+            } catch (_: Exception) {
+                //
+            }
         }
 
-        override fun lookup(hostname: String): List<InetAddress> {
-            val result = mutableListOf<InetAddress>()
-            val other = cname.flatMap { (regex, list) -> if (regex in hostname) list else emptyList() }
-
-            for (item in other) {
-                try {
-                    result.addAll(item.let(lookup))
-                } catch (_: Exception) {
-                    //
+        if (isEmpty()) {
+            try {
+                val result = if (hostname.canParseAsIpAddress()) {
+                    Dns.SYSTEM.lookup(hostname)
+                } else {
+                    (dns ?: Dns.SYSTEM).lookup(hostname)
                 }
-            }
-
-            if (result.isEmpty()) {
-                try {
-                    result.addAll(hostname.let(lookup))
-                } catch (_: Exception) {
-                    //
-                }
-            }
-
-            return result.apply {
-                if (isEmpty()) throw UnknownHostException("$hostname and CNAME${other} ")
-                shuffle()
+                addAll(result)
+            } catch (_: Exception) {
+                //
             }
         }
+
+        if (isEmpty()) throw UnknownHostException("$hostname and CNAME${other} ")
+        shuffle()
     }
 }
 
