@@ -11,7 +11,8 @@ import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.message.*
 
-object RssHubCommand : CompositeCommand(
+@PublishedApi
+internal object RssHubCommand : CompositeCommand(
     owner = RssHelperPlugin,
     "rss-hub", "rsshub",
     description = "RssHub 订阅 指令",

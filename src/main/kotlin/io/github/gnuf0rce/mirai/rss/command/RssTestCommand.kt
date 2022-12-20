@@ -11,7 +11,8 @@ import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import org.jsoup.*
 
-object RssTestCommand : CompositeCommand(
+@PublishedApi
+internal object RssTestCommand : CompositeCommand(
     owner = RssHelperPlugin,
     "rss-test", "rss-tools",
     description = "Rss 测试 相关指令",

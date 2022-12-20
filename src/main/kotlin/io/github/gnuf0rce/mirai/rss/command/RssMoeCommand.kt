@@ -10,7 +10,8 @@ import net.mamoe.mirai.contact.*
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 
-object RssMoeCommand : CompositeCommand(
+@PublishedApi
+internal object RssMoeCommand : CompositeCommand(
     owner = RssHelperPlugin,
     "rss-moe",
     description = "bangumi.moe Rss 订阅 系列 指令",

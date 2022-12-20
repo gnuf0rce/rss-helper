@@ -5,7 +5,8 @@ import io.ktor.http.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.message.data.*
 
-object RssMiraiCommand : CompositeCommand(
+@PublishedApi
+internal object RssMiraiCommand : CompositeCommand(
     owner = RssHelperPlugin,
     "rss-mirai", "mirai",
     description = "Mirai论坛订阅、相关指令",

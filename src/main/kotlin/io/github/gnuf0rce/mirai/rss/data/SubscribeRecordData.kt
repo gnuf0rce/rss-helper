@@ -4,7 +4,8 @@ import io.ktor.http.*
 import kotlinx.serialization.modules.*
 import net.mamoe.mirai.console.data.*
 
-object SubscribeRecordData : AutoSavePluginConfig("SubscribeRecordData") {
+@PublishedApi
+internal object SubscribeRecordData : AutoSavePluginConfig("SubscribeRecordData") {
     override val serializersModule: SerializersModule = SerializersModule {
         contextual(UrlSerializer)
     }

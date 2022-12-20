@@ -5,7 +5,8 @@ import io.ktor.http.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.message.data.*
 
-object RssMikanCommand : CompositeCommand(
+@PublishedApi
+internal object RssMikanCommand : CompositeCommand(
     owner = RssHelperPlugin,
     "rss-mikan", "mikan",
     description = "Mikan Plans Rss 订阅 系列 指令",

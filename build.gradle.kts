@@ -50,6 +50,10 @@ mirai {
     jvmTarget = JavaVersion.VERSION_11
 }
 
+kotlin {
+    explicitApi()
+}
+
 tasks {
     test {
         useJUnitPlatform()

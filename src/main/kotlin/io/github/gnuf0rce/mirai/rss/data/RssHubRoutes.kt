@@ -3,7 +3,8 @@ package io.github.gnuf0rce.mirai.rss.data
 import kotlinx.serialization.*
 
 @Serializable
-data class RssHubRoutes(
+@PublishedApi
+internal data class RssHubRoutes(
     @SerialName("data")
     val `data`: Map<String, Routes> = emptyMap(),
     @SerialName("message")

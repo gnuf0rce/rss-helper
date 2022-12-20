@@ -2,7 +2,8 @@ package io.github.gnuf0rce.mirai.rss.data
 
 import net.mamoe.mirai.console.data.*
 
-object RssContentConfig : ReadOnlyPluginConfig("RssContentConfig") {
+@PublishedApi
+internal object RssContentConfig : ReadOnlyPluginConfig("RssContentConfig") {
     @ValueDescription("Content limit length")
     val limit: Int by value(1024)
 

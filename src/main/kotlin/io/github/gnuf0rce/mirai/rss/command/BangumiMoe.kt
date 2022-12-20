@@ -5,7 +5,8 @@ import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 import java.time.*
 
-object OffsetDateTimeSerializer : KSerializer<OffsetDateTime> {
+@PublishedApi
+internal object OffsetDateTimeSerializer : KSerializer<OffsetDateTime> {
     override val descriptor: SerialDescriptor =
         PrimitiveSerialDescriptor(OffsetDateTime::class.qualifiedName!!, PrimitiveKind.LONG)
 
@@ -16,8 +17,9 @@ object OffsetDateTimeSerializer : KSerializer<OffsetDateTime> {
     override fun serialize(encoder: Encoder, value: OffsetDateTime) = encoder.encodeLong(value.toEpochSecond() * 1000)
 }
 
+@PublishedApi
 @Serializable
-data class BangumiRecent(
+internal data class BangumiRecent(
     @SerialName("acgdb_id")
     val acgId: String = "",
     @SerialName("cover")
@@ -42,8 +44,9 @@ data class BangumiRecent(
     val tagId: String
 )
 
+@PublishedApi
 @Serializable
-data class BangumiTag(
+internal data class BangumiTag(
     @SerialName("found")
     val found: Boolean,
     @SerialName("success")

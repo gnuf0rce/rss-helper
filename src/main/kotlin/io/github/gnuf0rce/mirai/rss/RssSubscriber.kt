@@ -18,7 +18,7 @@ import kotlin.coroutines.*
 import kotlin.properties.*
 import kotlin.reflect.*
 
-object RssSubscriber : CoroutineScope {
+public object RssSubscriber : CoroutineScope {
 
     override val coroutineContext: CoroutineContext =
         CoroutineName(name = "RssSubscriber") + SupervisorJob() + CoroutineExceptionHandler { context, throwable ->
@@ -118,7 +118,7 @@ object RssSubscriber : CoroutineScope {
         }
     }
 
-    suspend fun add(url: Url, subject: Contact) = mutex.withLock {
+    public suspend fun add(url: Url, subject: Contact): SubscribeRecord = mutex.withLock {
         val old = records[url] ?: SubscribeRecord()
         val new = if (old.contacts.isEmpty()) {
             val feed = client.feed(url)
@@ -133,13 +133,13 @@ object RssSubscriber : CoroutineScope {
         new
     }
 
-    suspend fun list(subject: Contact) = mutex.withLock {
+    public suspend fun list(subject: Contact): Map<Url, SubscribeRecord> = mutex.withLock {
         records.filter { (_, record) ->
             subject.id in record.contacts
         }
     }
 
-    suspend fun interval(url: Url, duration: Int) = mutex.withLock {
+    public suspend fun interval(url: Url, duration: Int): SubscribeRecord = mutex.withLock {
         check(duration > 0) { "订阅时间需要正数" }
         val old = requireNotNull(records[url]) { "订阅不存在" }
         val new = old.copy(interval = duration)
@@ -147,18 +147,18 @@ object RssSubscriber : CoroutineScope {
         new
     }
 
-    suspend fun stop(url: Url, subject: Contact) = mutex.withLock {
+    public suspend fun stop(url: Url, subject: Contact): SubscribeRecord = mutex.withLock {
         val old = requireNotNull(records[url]) { "订阅不存在" }
         val new = old.copy(contacts = old.contacts - subject.id)
         records[url] = new
         new
     }
 
-    fun start() {
+    public fun start() {
         SubscribeRecordData.records.keys.forEach(::task)
     }
 
-    fun stop() {
+    public fun stop() {
         coroutineContext.cancelChildren()
     }
 }

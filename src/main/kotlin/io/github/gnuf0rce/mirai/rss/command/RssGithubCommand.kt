@@ -5,7 +5,8 @@ import io.ktor.http.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.message.data.*
 
-object RssGithubCommand : CompositeCommand(
+@PublishedApi
+internal object RssGithubCommand : CompositeCommand(
     owner = RssHelperPlugin,
     "rss-github",
     description = "Github Rss 订阅 系列 指令",

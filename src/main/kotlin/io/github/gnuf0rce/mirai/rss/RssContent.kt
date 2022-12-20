@@ -71,13 +71,16 @@ internal val client: RssHttpClient by lazy {
     }
 }
 
-internal val Url.filename get() = encodedPath.substringAfterLast('/').decodeURLPart()
+@PublishedApi
+internal val Url.filename: String get() = encodedPath.substringAfterLast('/').decodeURLPart()
 
+@PublishedApi
 internal fun HttpMessage.contentDisposition(): ContentDisposition? {
     return ContentDisposition.parse(headers[HttpHeaders.ContentDisposition] ?: return null)
 }
 
-fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
+@PublishedApi
+internal fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
     when (value) {
         null, Unit -> Unit
         is String -> {
@@ -90,7 +93,8 @@ fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
     }
 }
 
-suspend fun SyndEntry.toMessage(subject: Contact, limit: Int, forward: Boolean): Message {
+@PublishedApi
+internal suspend fun SyndEntry.toMessage(subject: Contact, limit: Int, forward: Boolean): Message {
     val head = buildMessageChain {
         appendKeyValue("标题", title)
         appendKeyValue("链接", link)
@@ -116,7 +120,8 @@ suspend fun SyndEntry.toMessage(subject: Contact, limit: Int, forward: Boolean):
     }
 }
 
-fun SyndEntry.toDisplayStrategy() = object : ForwardMessage.DisplayStrategy {
+@PublishedApi
+internal fun SyndEntry.toDisplayStrategy(): ForwardMessage.DisplayStrategy = object : ForwardMessage.DisplayStrategy {
     override fun generatePreview(forward: RawForwardMessage): List<String> {
         return listOf(
             title,
@@ -145,7 +150,8 @@ private fun CharSequence.fullwidth(): String {
     }.toString()
 }
 
-suspend fun SyndEntry.getTorrent(): File? {
+@PublishedApi
+internal suspend fun SyndEntry.getTorrent(): File? {
     // TODO magnet to file
     val url = Url(torrent?.takeIf { it.startsWith("http") } ?: return null)
     return try {
@@ -161,10 +167,13 @@ suspend fun SyndEntry.getTorrent(): File? {
     }
 }
 
+@PublishedApi
 internal fun Element.src(): String = attr("src") ?: throw NoSuchElementException("src")
 
+@PublishedApi
 internal fun Element.href(): String = attr("href") ?: throw NoSuchElementException("href")
 
+@PublishedApi
 internal suspend fun Element.image(subject: Contact): MessageContent {
     val url = Url(src())
     return try {
@@ -201,7 +210,8 @@ internal suspend fun Element.image(subject: Contact): MessageContent {
     }
 }
 
-suspend fun Element.toMessage(subject: Contact): MessageChain {
+@PublishedApi
+internal suspend fun Element.toMessage(subject: Contact): MessageChain {
     val visitor = object : NodeVisitor, MutableList<Node> by ArrayList() {
         override fun head(node: Node, depth: Int) {
             if (node is TextNode) add(node)

@@ -11,7 +11,8 @@ import io.ktor.util.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
 
-class RomePlugin internal constructor(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
+@PublishedApi
+internal class RomePlugin(val accept: List<ContentType>, val parser: () -> SyndFeedInput) {
 
     data class Config(
         var accept: MutableList<ContentType> = mutableListOf(

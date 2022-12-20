@@ -6,7 +6,8 @@ import io.ktor.util.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.message.data.*
 
-object RssBaseCommand : CompositeCommand(
+@PublishedApi
+internal object RssBaseCommand : CompositeCommand(
     owner = RssHelperPlugin,
     "rss",
     description = "Rss 订阅、取消、详情等相关指令",

@@ -3,7 +3,7 @@ package io.github.gnuf0rce.mirai.rss.data
 import kotlinx.serialization.*
 
 @Serializable
-data class SubscribeRecord(
+public data class SubscribeRecord(
     @SerialName("name")
     val name: String = "",
     @SerialName("contact")

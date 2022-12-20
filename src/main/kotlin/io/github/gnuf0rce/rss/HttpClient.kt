@@ -1,139 +1,67 @@
 package io.github.gnuf0rce.rss
 
 import com.rometools.rome.io.*
-import io.ktor.client.*
-import io.ktor.client.engine.okhttp.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.compression.*
-import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.utils.io.core.*
 import io.ktor.utils.io.errors.*
-import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Dns
 import okhttp3.dnsoverhttps.*
 import okhttp3.internal.*
-import okhttp3.internal.tls.*
 import java.net.*
 import java.security.*
 import java.security.cert.*
 import javax.net.ssl.*
 
+@PublishedApi
+internal const val DefaultDnsOverHttps: String = "https://public.dns.iij.jp/dns-query"
 
-const val DefaultDnsOverHttps = "https://public.dns.iij.jp/dns-query"
-
-val DefaultCNAME = mapOf(
+@PublishedApi
+internal val DefaultCNAME: Map<Regex, List<String>> = mapOf(
     "twimg.com".toRegex() to listOf("twimg.twitter.map.fastly.net", "pbs.twimg.com.akamaized.net"),
 )
 
-val DefaultProxy = mapOf(
+@PublishedApi
+internal val DefaultProxy: Map<String, String> = mapOf(
     "www.google.com" to "http://127.0.0.1:8080",
     "twitter.com" to "socks://127.0.0.1:1080"
 )
 
-val DefaultSNIHosts = listOf("""sukebei\.nyaa\.(si|net)""".toRegex())
+@PublishedApi
+internal val DefaultSNIHosts: List<Regex> = listOf("""sukebei\.nyaa\.(si|net)""".toRegex())
 
-const val DefaultTimeout = 30 * 1000L
+@PublishedApi
+internal const val DefaultTimeout: Long = 30 * 1000L
 
-interface RssHttpClientConfig {
+public interface RssHttpClientConfig {
 
-    val doh get() = DefaultDnsOverHttps
+    public val doh: String get() = DefaultDnsOverHttps
 
-    val ipv6 get() = false
+    public val ipv6: Boolean get() = false
 
-    val cname get() = DefaultCNAME
+    public val cname: Map<Regex, List<String>> get() = DefaultCNAME
 
-    val proxy get() = DefaultProxy
+    public val proxy: Map<String, String> get() = DefaultProxy
 
-    val sni get() = DefaultSNIHosts
+    public val sni: List<Regex> get() = DefaultSNIHosts
 
-    val timeout get() = DefaultTimeout
+    public val timeout: Long get() = DefaultTimeout
 }
 
-val DefaultRssJson = Json {
+@PublishedApi
+internal val DefaultRssJson: Json = Json {
     prettyPrint = true
     ignoreUnknownKeys = true
     isLenient = true
     allowStructuredMapKeys = true
 }
 
-val DefaultRomeParser: () -> SyndFeedInput = ::SyndFeedInput
+@PublishedApi
+internal val DefaultRomeParser: () -> SyndFeedInput = ::SyndFeedInput
 
-open class RssHttpClient : CoroutineScope, Closeable, RssHttpClientConfig {
-    protected open val ignore: (Throwable) -> Boolean = {
-        when (it) {
-            is ResponseException -> {
-                false
-            }
-            is IOException,
-            is FeedException -> {
-                true
-            }
-            else -> {
-                false
-            }
-        }
-    }
 
-    protected open val client = HttpClient(OkHttp) {
-        BrowserUserAgent()
-        ContentEncoding()
-        install(HttpTimeout) {
-            socketTimeoutMillis = timeout
-            connectTimeoutMillis = timeout
-            requestTimeoutMillis = null
-        }
-        install(RomePlugin) {
-            parser = DefaultRomeParser
-        }
-        install(ContentNegotiation) {
-            json(json = DefaultRssJson)
-        }
-        expectSuccess = true
-        engine {
-            config {
-                // connectionPool(ConnectionPool(5, 30, TimeUnit.SECONDS))
-                sslSocketFactory(RubySSLSocketFactory(sni), RubyX509TrustManager)
-                hostnameVerifier { hostname, session ->
-                    sni.any { it matches hostname } || OkHostnameVerifier.verify(hostname, session)
-                }
-                proxySelector(ProxySelector(this@RssHttpClient.proxy))
-                dns(Dns(doh, cname, ipv6))
-            }
-        }
-    }
-
-    override val coroutineContext get() = client.coroutineContext
-
-    override fun close() = client.close()
-
-    protected open val max = 20
-
-    suspend fun <T> useHttpClient(block: suspend (HttpClient) -> T): T = supervisorScope {
-        var count = 0
-        var current: Throwable? = null
-        while (isActive) {
-            try {
-                return@supervisorScope block(client)
-            } catch (cause: Throwable) {
-                current = cause
-                if (isActive && ignore(cause)) {
-                    if (++count > max) {
-                        throw cause
-                    }
-                } else {
-                    throw cause
-                }
-            }
-        }
-        throw CancellationException(null, current)
-    }
-}
-
-fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySelector() {
+@PublishedApi
+internal fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySelector() {
     override fun select(uri: URI?): MutableList<Proxy> {
         return proxy.mapNotNull { (host, url) ->
             if (uri?.host == host || host == "127.0.0.1") {
@@ -147,7 +75,8 @@ fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySel
     override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) = Unit
 }
 
-fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns = object : Dns {
+@PublishedApi
+internal fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns = object : Dns {
     val dns = if (doh.isNotBlank()) DnsOverHttps(doh, ipv6) else null
 
     override fun lookup(hostname: String): List<InetAddress> = buildList {
@@ -184,7 +113,8 @@ fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns = obje
     }
 }
 
-fun DnsOverHttps(url: String, ipv6: Boolean): DnsOverHttps {
+@PublishedApi
+internal fun DnsOverHttps(url: String, ipv6: Boolean): DnsOverHttps {
     return DnsOverHttps.Builder()
         .client(okhttp3.OkHttpClient())
         .url(url.toHttpUrl())
@@ -195,7 +125,8 @@ fun DnsOverHttps(url: String, ipv6: Boolean): DnsOverHttps {
         .build()
 }
 
-fun Url.toProxy(): Proxy {
+@PublishedApi
+internal fun Url.toProxy(): Proxy {
     val type = when (protocol) {
         URLProtocol.SOCKS -> Proxy.Type.SOCKS
         URLProtocol.HTTP -> Proxy.Type.HTTP
@@ -216,7 +147,8 @@ private fun SSLContext(tm: X509TrustManager = X509TrustManager()): SSLContext {
     }
 }
 
-class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocketFactory() {
+@PublishedApi
+internal class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocketFactory() {
     companion object {
         private val default: SSLSocketFactory = SSLContext(tm = RubyX509TrustManager).socketFactory
         internal val logs = mutableMapOf<String, SSLParameters>()
@@ -254,7 +186,8 @@ class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocketFactory(
     override fun getSupportedCipherSuites(): Array<String> = default.supportedCipherSuites
 }
 
-object RubyX509TrustManager : X509TrustManager by X509TrustManager() {
+@PublishedApi
+internal object RubyX509TrustManager : X509TrustManager by X509TrustManager() {
 
     override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
 
