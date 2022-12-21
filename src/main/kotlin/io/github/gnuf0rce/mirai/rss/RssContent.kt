@@ -37,14 +37,12 @@ internal val client: RssHttpClient by lazy {
     object : RssHttpClient(), RssHttpClientConfig by HttpClientConfig {
         override val ignore: (Throwable) -> Boolean = { cause ->
             when (cause) {
-                is UnknownHostException -> {
-                    true
-                }
+                is UnknownHostException -> false
                 is SSLException -> {
                     val message = cause.message.orEmpty()
                     for ((address, ssl) in RubySSLSocketFactory.logs) {
                         if (address in message) {
-                            File("./rss_ssl.log").appendText(buildString {
+                            File("./rss_ssl_error.${address}.log").appendText(buildString {
                                 appendLine("$address ${OffsetDateTime.now()} $message")
                                 appendLine("protocols: ${ssl.protocols.asList()}")
                                 appendLine("cipherSuites: ${ssl.cipherSuites.asList()}")
@@ -52,19 +50,21 @@ internal val client: RssHttpClient by lazy {
                             })
                         }
                     }
-                    true
+                    false
                 }
                 is IOException -> {
-                    logger.warning({ "RssHttpClient IOException" }, cause)
-                    true
+                    if (cause.message == "Connection reset") {
+                        false
+                    } else {
+                        logger.warning({ "RssHttpClient IOException" }, cause)
+                        true
+                    }
                 }
                 is ParsingFeedException -> {
                     logger.warning({ "RssHttpClient XML解析失败" }, cause)
-                    true
-                }
-                else -> {
                     false
                 }
+                else -> false
             }
         }
         override val timeout: Long get() = HttpClientConfig.timeout
