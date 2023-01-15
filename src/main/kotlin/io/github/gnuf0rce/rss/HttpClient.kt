@@ -59,17 +59,16 @@ internal val DefaultRssJson: Json = Json {
 @PublishedApi
 internal val DefaultRomeParser: () -> SyndFeedInput = ::SyndFeedInput
 
-
 @PublishedApi
 internal fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySelector() {
     override fun select(uri: URI?): MutableList<Proxy> {
-        return proxy.mapNotNull { (host, url) ->
-            if (uri?.host == host || host == "127.0.0.1") {
+        return proxy.mapNotNullTo(ArrayList()) { (host, url) ->
+            if (uri?.host == host || host == "127.0.0.1" || host == "localhost" || host == "default") {
                 Url(url).toProxy()
             } else {
                 null
             }
-        }.toMutableList()
+        }
     }
 
     override fun connectFailed(uri: URI?, sa: SocketAddress?, ioe: IOException?) = Unit

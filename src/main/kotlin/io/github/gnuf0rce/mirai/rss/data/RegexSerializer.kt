@@ -4,6 +4,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 
+@PublishedApi
 internal object RegexSerializer : KSerializer<Regex> {
 
     override val descriptor: SerialDescriptor =

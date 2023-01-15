@@ -5,6 +5,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 
+@PublishedApi
 internal object UrlSerializer : KSerializer<Url> {
 
     override val descriptor: SerialDescriptor =
