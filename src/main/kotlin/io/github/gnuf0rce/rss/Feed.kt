@@ -8,6 +8,8 @@ import io.ktor.http.*
 import org.jsoup.nodes.*
 import org.jsoup.parser.*
 import java.time.*
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.*
 import javax.net.ssl.*
 import kotlin.properties.*
@@ -52,6 +54,9 @@ internal val SyndEntry.updated: OffsetDateTime? get() = updatedDate?.toOffsetDat
 
 @PublishedApi
 internal val SyndEntry.last: OffsetDateTime? get() = (updatedDate ?: publishedDate)?.toOffsetDateTime()
+
+internal fun OffsetDateTime?.toReadable(): String =
+    this?.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)) ?: "N/A"
 
 private fun ContentType(value: String?): ContentType {
     if (value == null) return ContentType.Text.Plain

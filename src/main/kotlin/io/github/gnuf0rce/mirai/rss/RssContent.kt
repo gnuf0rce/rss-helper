@@ -1,8 +1,8 @@
 package io.github.gnuf0rce.mirai.rss
 
-import com.rometools.rome.feed.synd.*
-import com.rometools.rome.io.*
-import io.github.gnuf0rce.mirai.rss.data.*
+import com.rometools.rome.feed.synd.SyndEntry
+import com.rometools.rome.io.ParsingFeedException
+import io.github.gnuf0rce.mirai.rss.data.HttpClientConfig
 import io.github.gnuf0rce.rss.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -10,16 +10,23 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.jvm.javaio.*
-import net.mamoe.mirai.contact.*
+import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
-import net.mamoe.mirai.utils.*
-import org.jsoup.nodes.*
-import org.jsoup.select.*
-import java.io.*
-import java.net.*
-import java.time.*
-import javax.net.ssl.*
+import net.mamoe.mirai.utils.MiraiLogger
+import net.mamoe.mirai.utils.warning
+import org.jsoup.nodes.Element
+import org.jsoup.nodes.Node
+import org.jsoup.nodes.TextNode
+import org.jsoup.select.NodeTraversor
+import org.jsoup.select.NodeVisitor
+import java.io.File
+import java.io.IOException
+import java.net.URLDecoder
+import java.net.UnknownHostException
+import java.nio.charset.StandardCharsets
+import java.time.OffsetDateTime
+import javax.net.ssl.SSLException
 
 internal val logger by lazy {
     try {
@@ -86,20 +93,26 @@ internal fun MessageChainBuilder.appendKeyValue(key: String, value: Any?) {
         is String -> {
             if (value.isNotBlank()) appendLine("$key: $value")
         }
+
         is Collection<*> -> {
             if (value.isNotEmpty()) appendLine("$key: $value")
         }
+
         else -> appendLine("$key: $value")
     }
+}
+
+internal fun String.toDecodedURL(): String {
+    return URLDecoder.decode(this, StandardCharsets.UTF_8)
 }
 
 @PublishedApi
 internal suspend fun SyndEntry.toMessage(subject: Contact, limit: Int, forward: Boolean): Message {
     val head = buildMessageChain {
-        appendKeyValue("标题", title)
+        appendKeyValue("标题", title.toDecodedURL())
         appendKeyValue("链接", link)
-        appendKeyValue("发布时间", published)
-        appendKeyValue("更新时间", updated.takeIf { it != published })
+        appendKeyValue("发布时间", published.toReadable())
+        appendKeyValue("更新时间", updated.takeIf { it != published }?.toReadable())
         appendKeyValue("分类", categories.map { it.name })
         appendKeyValue("作者", author)
         appendKeyValue("种子", torrent)
@@ -126,7 +139,7 @@ internal fun SyndEntry.toDisplayStrategy(): ForwardMessage.DisplayStrategy = obj
         return listOf(
             title,
             author,
-            last.toString(),
+            last.toReadable(),
             categories.joinToString { it.name }
         )
     }
@@ -226,7 +239,7 @@ internal suspend fun Element.toMessage(subject: Contact): MessageChain {
     val builder = MessageChainBuilder()
     visitor.forEach { node ->
         when (node) {
-            is TextNode -> builder.append(node.wholeText.removePrefix("\n\t").removeSuffix("\n"))
+            is TextNode -> builder.append(node.text())
             is Element -> when (node.nodeName()) {
                 "img" -> {
                     builder.append(node.image(subject))
