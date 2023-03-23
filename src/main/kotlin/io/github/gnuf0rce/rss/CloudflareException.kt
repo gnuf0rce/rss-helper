@@ -1,4 +1,4 @@
-package io.github.gnuf0rce.rss;
+package io.github.gnuf0rce.rss
 
 import io.ktor.client.plugins.*
 

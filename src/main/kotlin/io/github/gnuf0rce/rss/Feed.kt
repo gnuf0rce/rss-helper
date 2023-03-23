@@ -7,6 +7,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import org.jsoup.nodes.*
 import org.jsoup.parser.*
+import java.net.*
 import java.time.*
 import java.util.*
 import javax.net.ssl.*
@@ -21,7 +22,10 @@ internal suspend fun RssHttpClient.feed(url: Url): SyndFeed = useHttpClient { ht
     } catch (cause: Exception) {
         throw when (cause) {
             is SSLException -> {
-                SSLException("Host: ${url.host}, ${cause.message}", cause)
+                HostConnectException(url.host, cause)
+            }
+            is SocketException -> {
+                if ("Connection" in cause.message.orEmpty()) HostConnectException(url.host, cause) else cause
             }
             is ResponseException -> {
                 if ("Cloudflare" in cause.message.orEmpty()) CloudflareException(cause) else cause
