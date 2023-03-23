@@ -26,8 +26,8 @@ repositories {
 }
 
 dependencies {
-    implementation("com.rometools:rome:1.18.0")
-    implementation("org.jsoup:jsoup:1.15.3")
+    implementation("com.rometools:rome:2.1.0")
+    implementation("org.jsoup:jsoup:1.15.4")
     compileOnly("com.google.code.findbugs:jsr305:3.0.2")
     testImplementation(kotlin("test"))
     //
@@ -40,9 +40,11 @@ dependencies {
     implementation("io.ktor:ktor-client-encoding")
     implementation("io.ktor:ktor-client-content-negotiation")
     implementation("io.ktor:ktor-serialization-kotlinx-json")
-    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps:4.10.0")
     //
-    implementation(platform("org.slf4j:slf4j-parent:2.0.5"))
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
+    implementation("com.squareup.okhttp3:okhttp-dnsoverhttps")
+    //
+    implementation(platform("org.slf4j:slf4j-parent:2.0.6"))
     testImplementation("org.slf4j:slf4j-simple")
 }
 
