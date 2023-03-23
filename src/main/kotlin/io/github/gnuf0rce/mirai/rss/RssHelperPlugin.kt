@@ -1,6 +1,6 @@
 package io.github.gnuf0rce.mirai.rss
 
-import net.mamoe.mirai.console.MiraiConsole
+import net.mamoe.mirai.console.*
 import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
@@ -20,15 +20,6 @@ internal object RssHelperPlugin : KotlinPlugin(
     private val commands: List<Command> by services()
     private val config: List<PluginConfig> by services()
     private val data: List<PluginData> by services()
-
-    @Suppress("INVISIBLE_MEMBER")
-    private inline fun <reified T : Any> services(): Lazy<List<T>> = lazy {
-        with(net.mamoe.mirai.console.internal.util.PluginServiceHelper) {
-            jvmPluginClasspath.pluginClassLoader
-                .findServices<T>()
-                .loadAllServices()
-        }
-    }
 
     override fun onEnable() {
         // XXX: mirai console version check
