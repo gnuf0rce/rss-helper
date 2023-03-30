@@ -98,7 +98,7 @@ public object RssSubscriber : CoroutineScope {
         }
     }
 
-    private fun task(link: Url) = launch(SupervisorJob()) {
+    private fun task(link: Url) = launch {
         while (isActive) {
             val record = mutex.withLock { records[link]?.takeIf { it.contacts.isNotEmpty() } } ?: return@launch
             delay(record.interval * 60 * 1000L)
