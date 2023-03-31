@@ -61,12 +61,21 @@ internal val DefaultRomeParser: () -> SyndFeedInput = ::SyndFeedInput
 
 @PublishedApi
 internal fun ProxySelector(proxy: Map<String, String>): ProxySelector = object : ProxySelector() {
-    override fun select(uri: URI?): MutableList<Proxy> {
-        return proxy.mapNotNullTo(ArrayList()) { (host, url) ->
-            if (uri?.host == host || host == "127.0.0.1" || host == "localhost" || host == "default") {
-                Url(url).toProxy()
-            } else {
-                null
+    override fun select(uri: URI?): List<Proxy> {
+        return buildList {
+            for ((host, url) in proxy) {
+                if (uri?.host == host || host == "127.0.0.1" || host == "localhost" || host == "default") {
+                    add(Url(url).toProxy())
+                }
+            }
+            ifEmpty {
+                val system = System.getProperty("java.net.useSystemProxies", "false")
+                try {
+                    System.setProperty("java.net.useSystemProxies", "true")
+                    addAll(getDefault().select(uri))
+                } finally {
+                    System.setProperty("java.net.useSystemProxies", system)
+                }
             }
         }
     }
