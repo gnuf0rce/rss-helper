@@ -1,3 +1,7 @@
+## 1.4.0
+
+1.  feat: useSystemProxies
+
 ## 1.3.0 (23/03/30)
 
 1.  feat: kotlin explicit api
