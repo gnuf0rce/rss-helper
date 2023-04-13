@@ -67,11 +67,11 @@
 
 ### RssTestCommand
 
-| 指令                          | 描述     |
-|:----------------------------|:-------|
-| `/<rss-test> <build> [url]` | 测试一个订阅 |
-| `/<rss-test> <ssl>`         | 测试SSL  |
-| `/<rss-test> <clear>`       | 清空种子文件 |
+| 指令                                     | 描述     |
+|:---------------------------------------|:-------|
+| `/<rss-test> <build> [url] [forward]?` | 测试一个订阅 |
+| `/<rss-test> <ssl>`                    | 测试SSL  |
+| `/<rss-test> <clear>`                  | 清空种子文件 |
 
 ### RssMiraiCommand
 

@@ -1,6 +1,7 @@
 package io.github.gnuf0rce.mirai.rss.command
 
 import io.github.gnuf0rce.mirai.rss.*
+import io.github.gnuf0rce.mirai.rss.data.*
 import io.github.gnuf0rce.rss.feed
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -20,7 +21,7 @@ internal object RssTestCommand : CompositeCommand(
 ) {
     @SubCommand
     @Description("测试一个订阅")
-    suspend fun CommandSender.build(url: Url, forward: Boolean = false) {
+    suspend fun CommandSender.build(url: Url, forward: Boolean = RssContentConfig.forward) {
         val feed = client.feed(url)
         if (feed.entries.isNullOrEmpty()) {
             sendMessage("结果为空".toPlainText())
