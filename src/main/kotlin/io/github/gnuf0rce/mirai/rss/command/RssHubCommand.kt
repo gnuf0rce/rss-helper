@@ -49,27 +49,23 @@ internal object RssHubCommand : CompositeCommand(
         var stop = false
         val paths = link.split("/").mapNotNull {
             if (stop) return@mapNotNull null
-            if (it.startsWith(":")) {
-                lateinit var value: String
-                while (isActive) {
-                    sendMessage("${link}, 输入${it} (置空可以输入#)")
-                    value = fromEvent.nextMessage().content.trim()
-                    if (value.isBlank() || value.startsWith("#")) {
-                        if (it.endsWith("?")) {
-                            stop = true
-                            return@mapNotNull null
-                        } else {
-                            sendMessage("${it}不能为空")
-                            continue
-                        }
+            if (it.startsWith(":").not()) return@mapNotNull it
+            while (isActive) {
+                sendMessage("${link}, 输入${it} (置空可以输入#)")
+                val value = fromEvent.nextMessage().content.trim()
+                if (value.isBlank() || value.startsWith("#")) {
+                    if (it.endsWith("?")) {
+                        stop = true
+                        return@mapNotNull null
                     } else {
-                        break
+                        sendMessage("${it}不能为空")
+                        continue
                     }
+                } else {
+                    return@mapNotNull value
                 }
-                value
-            } else {
-                it
             }
+            null
         }
 
         val url = URLBuilder(RssHubConfig.host)
