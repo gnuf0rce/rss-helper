@@ -19,7 +19,6 @@ internal object RssHubCommand : CompositeCommand(
     overrideContext = RssCommandArgumentContext
 ) {
 
-    @OptIn(ExperimentalSerializationApi::class)
     private suspend fun routes(): RssHubRoutes {
         return client.useHttpClient { http ->
             http.get {
