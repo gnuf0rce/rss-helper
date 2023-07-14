@@ -36,10 +36,11 @@ internal object RssTestCommand : CompositeCommand(
 
     @SubCommand
     suspend fun CommandSender.ssl() {
-        val html = Jsoup.parse(client.useHttpClient { http ->
+        val html = client.useHttpClient { http ->
             http.get("https://ssl.haka.se/").body<String>()
-        })
-        sendMessage(html.wholeText())
+        }
+        val document = Jsoup.parse(html)
+        sendMessage(document.wholeText())
     }
 
     @SubCommand
