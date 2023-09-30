@@ -11,7 +11,7 @@ import net.mamoe.mirai.console.util.*
 
 @PublishedApi
 internal object RssHelperPlugin : KotlinPlugin(
-    JvmPluginDescription(id = "io.github.gnuf0rce.rss-helper", version = "1.4.0") {
+    JvmPluginDescription(id = "io.github.gnuf0rce.rss-helper", version = "1.4.1") {
         name("rss-helper")
         author("cssxsh")
     }

@@ -1,4 +1,10 @@
-## 1.4.0
+## 1.4.1 (23/09/30)
+
+1.  feat: rss-test forward by RssContentConfig
+2.  update: dependencies
+3.  fix: HttpClient Dns
+
+## 1.4.0 (23/04/12)
 
 1.  feat: useSystemProxies
 
