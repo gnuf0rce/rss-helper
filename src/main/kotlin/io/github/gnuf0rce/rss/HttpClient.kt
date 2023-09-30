@@ -85,10 +85,11 @@ internal fun ProxySelector(proxy: Map<String, String>): ProxySelector = object :
 
 @PublishedApi
 internal fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): Dns = object : Dns {
-    val dns = if (doh.isNotBlank()) DnsOverHttps(doh, ipv6) else null
+    private val dns = if (doh.isNotEmpty()) DnsOverHttps(doh, ipv6) else null
 
     override fun lookup(hostname: String): List<InetAddress> = buildList {
         val other = cname.flatMap { (regex, list) -> if (regex in hostname) list else emptyList() }
+        val cache = ArrayList<Exception>()
 
         for (item in other) {
             try {
@@ -98,8 +99,8 @@ internal fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): D
                     (dns ?: Dns.SYSTEM).lookup(item)
                 }
                 addAll(result)
-            } catch (_: Exception) {
-                //
+            } catch (cause: Exception) {
+                cache.add(cause)
             }
         }
 
@@ -111,12 +112,26 @@ internal fun Dns(doh: String, cname: Map<Regex, List<String>>, ipv6: Boolean): D
                     (dns ?: Dns.SYSTEM).lookup(hostname)
                 }
                 addAll(result)
-            } catch (_: Exception) {
-                //
+            } catch (cause: Exception) {
+                cache.add(cause)
             }
         }
 
-        if (isEmpty()) throw UnknownHostException("$hostname and CNAME${other} ")
+        if (isEmpty() && cache.isEmpty().not()) {
+            try {
+                addAll(Dns.SYSTEM.lookup(hostname))
+            } catch (cause: Exception) {
+                cache.add(cause)
+            }
+        }
+
+        if (isEmpty()) {
+            val exception = UnknownHostException("$hostname and CNAME${other} by DoH(url=${doh})")
+            for (suppressed in cache) {
+                exception.addSuppressed(suppressed)
+            }
+            throw exception
+        }
         shuffle()
     }
 }
@@ -201,5 +216,5 @@ internal object RubyX509TrustManager : X509TrustManager by X509TrustManager() {
 
     override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) = Unit
 
-    // override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+    override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
 }

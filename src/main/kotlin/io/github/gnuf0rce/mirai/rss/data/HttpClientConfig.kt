@@ -16,7 +16,6 @@ internal object HttpClientConfig : ReadOnlyPluginConfig("HttpClientConfig"), Rss
     @ValueDescription("Use IPv6")
     override val ipv6: Boolean by value(false)
 
-    @ValueName("sni")
     @ValueDescription("SNI HostName Remove Regex")
     override val sni: List<Regex> by value(DefaultSNIHosts)
 
