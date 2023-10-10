@@ -1,5 +1,10 @@
 package io.github.gnuf0rce.rss
 
+import com.rometools.modules.mediarss.MediaEntryModule
+import com.rometools.modules.mediarss.MediaModule
+import com.rometools.modules.mediarss.types.Metadata
+import com.rometools.rome.feed.module.DCModule
+import com.rometools.rome.feed.module.Module
 import com.rometools.rome.feed.synd.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -78,11 +83,57 @@ internal val Bittorrent: ContentType = ContentType.parse("application/x-bittorre
 @PublishedApi
 internal fun SyndEntry.find(type: ContentType): SyndContent? {
     for (content in contents) {
-        if (content == null) continue
         if (type.match(content.contentType)) return content
     }
     description?.let { content ->
         if (type.match(content.contentType)) return content
+    }
+    for (module in modules) {
+        val content = module.description() ?: continue
+        if (type.match(content.contentType)) return content
+    }
+    return null
+}
+
+@PublishedApi
+internal fun Module.description(): SyndContent? {
+    when (this) {
+        is DCModule -> {
+            val impl = SyndContentImpl()
+            impl.value = "text/plain"
+            description?.let { content ->
+                impl.value = content
+                return impl
+            }
+            for (content in descriptions) {
+                if (content == null) continue
+                impl.value = content
+                return impl
+            }
+        }
+        is MediaModule -> {
+            val metadata = sequence<Metadata> {
+                yield(metadata)
+                if (this@description is MediaEntryModule) {
+                    for (content in mediaContents) {
+                        yield(content.metadata)
+                    }
+                    for (group in mediaGroups) {
+                        yield(group.metadata)
+                        for (content in group.contents) {
+                            yield(content.metadata)
+                        }
+                    }
+                }
+            }
+            val impl = SyndContentImpl()
+            for (item in metadata) {
+                impl.value = item.description ?: continue
+                impl.type = item.descriptionType
+                return impl
+            }
+            return null
+        }
     }
     return null
 }
@@ -94,12 +145,7 @@ internal fun SyndEntry.find(type: ContentType): SyndContent? {
  */
 @PublishedApi
 internal val SyndEntry.html: Document?
-    get() = find(ContentType.Text.Html)?.let {
-        Parser.parseBodyFragment(
-            it.value,
-            uri
-        )
-    }
+    get() = find(ContentType.Text.Html)?.let { Parser.parseBodyFragment(it.value, uri) }
 
 /**
  * 查找第一个 [ContentType] 为 [ContentType.Text.Plain] 的 [SyndContent]
@@ -107,12 +153,7 @@ internal val SyndEntry.html: Document?
  */
 @PublishedApi
 internal val SyndEntry.text: String?
-    get() = find(ContentType.Text.Plain)?.let {
-        Parser.unescapeEntities(
-            it.value,
-            false
-        )
-    }
+    get() = find(ContentType.Text.Plain)?.let { Parser.unescapeEntities(it.value, false) }
 
 /**
  * 查找第一个 [ContentType] 为 [Bittorrent] 的 [SyndEnclosure]，取 URL
