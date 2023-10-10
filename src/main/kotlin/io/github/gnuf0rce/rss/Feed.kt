@@ -78,9 +78,12 @@ internal val Bittorrent: ContentType = ContentType.parse("application/x-bittorre
 @PublishedApi
 internal fun SyndEntry.find(type: ContentType): SyndContent? {
     for (content in contents) {
+        if (content == null) continue
         if (type.match(content.contentType)) return content
     }
-    if (type.match(description.contentType)) return description
+    description?.let { content ->
+        if (type.match(content.contentType)) return content
+    }
     return null
 }
 
