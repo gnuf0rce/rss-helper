@@ -27,15 +27,15 @@ repositories {
 
 dependencies {
     implementation("com.rometools:rome:2.1.0")
+    implementation("com.rometools:rome-modules:2.1.0")
     implementation("org.jsoup:jsoup:1.16.1")
-    compileOnly("com.google.code.findbugs:jsr305:3.0.2")
     testImplementation(kotlin("test"))
     //
     implementation(platform("net.mamoe:mirai-bom:2.15.0"))
     compileOnly("net.mamoe:mirai-console-compiler-common")
     testImplementation("net.mamoe:mirai-logging-slf4j")
     //
-    implementation(platform("io.ktor:ktor-bom:2.3.3"))
+    implementation(platform("io.ktor:ktor-bom:2.3.5"))
     implementation("io.ktor:ktor-client-okhttp")
     implementation("io.ktor:ktor-client-encoding")
     implementation("io.ktor:ktor-client-content-negotiation")
@@ -44,7 +44,7 @@ dependencies {
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.11.0"))
     implementation("com.squareup.okhttp3:okhttp-dnsoverhttps")
     //
-    implementation(platform("org.slf4j:slf4j-parent:2.0.7"))
+    implementation(platform("org.slf4j:slf4j-parent:2.0.9"))
     testImplementation("org.slf4j:slf4j-simple")
 }
 
