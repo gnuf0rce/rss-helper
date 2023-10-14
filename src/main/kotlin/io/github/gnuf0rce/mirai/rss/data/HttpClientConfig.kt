@@ -5,7 +5,7 @@ import kotlinx.serialization.modules.*
 import net.mamoe.mirai.console.data.*
 
 @PublishedApi
-internal object HttpClientConfig : ReadOnlyPluginConfig("HttpClientConfig"), RssHttpClientConfig {
+internal object HttpClientConfig : ReadOnlyPluginConfig(saveName = "HttpClientConfig"), RssHttpClientConfig {
     override val serializersModule: SerializersModule = SerializersModule {
         contextual(RegexSerializer)
     }

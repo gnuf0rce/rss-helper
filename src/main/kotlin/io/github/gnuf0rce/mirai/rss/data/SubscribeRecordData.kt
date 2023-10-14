@@ -5,7 +5,7 @@ import kotlinx.serialization.modules.*
 import net.mamoe.mirai.console.data.*
 
 @PublishedApi
-internal object SubscribeRecordData : AutoSavePluginConfig("SubscribeRecordData") {
+internal object SubscribeRecordData : AutoSavePluginConfig(saveName = "SubscribeRecordData") {
     override val serializersModule: SerializersModule = SerializersModule {
         contextual(UrlSerializer)
     }

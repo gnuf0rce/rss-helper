@@ -27,9 +27,10 @@ public object RssSubscriber : CoroutineScope {
 
     private val histories get() = FeedRecordData.histories
     private val records get() = SubscribeRecordData.records
-    private val mutex = Mutex()
     private val limit get() = RssContentConfig.limit
     private val forward get() = RssContentConfig.forward
+
+    private val mutex = Mutex()
 
     private var SyndEntry.history by object : ReadWriteProperty<SyndEntry, OffsetDateTime?> {
         override fun getValue(thisRef: SyndEntry, property: KProperty<*>): OffsetDateTime? {
