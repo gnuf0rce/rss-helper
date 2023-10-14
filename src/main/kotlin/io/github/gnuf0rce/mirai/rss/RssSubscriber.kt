@@ -39,6 +39,7 @@ public object RssSubscriber : CoroutineScope {
         }
 
         override fun setValue(thisRef: SyndEntry, property: KProperty<*>, value: OffsetDateTime?) {
+            logger.info { "${thisRef.uri}: ${thisRef.last.orMin()} over ${value.orMin()}" }
             histories[thisRef.uri] = value.orMin().toInstant().toEpochMilli() / 1000.0
         }
     }
@@ -108,7 +109,6 @@ public object RssSubscriber : CoroutineScope {
                 feed.entries
                     .filter { it.history == null || it.last.orMin() > it.history.orMin() }
                     .forEach { entry ->
-                        logger.info { "${entry.uri}: ${entry.last.orMin()} over ${entry.history}" }
                         record.sendFile { entry.getTorrent() }
                         record.sendMessage { contact -> entry.toMessage(contact, limit, forward) }
                         entry.history = entry.last.orNow()
