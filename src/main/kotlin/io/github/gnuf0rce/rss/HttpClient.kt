@@ -179,7 +179,7 @@ internal class RubySSLSocketFactory(private val matcher: List<Regex>) : SSLSocke
 
     private fun Socket.setServerNames(): Socket = apply {
         if (this !is SSLSocket) return@apply
-        val address = inetAddress.hostAddress
+        val address = inetAddress?.hostAddress ?: return@apply
         sslParameters = sslParameters.apply {
             serverNames = serverNames?.filter { name ->
                 name !is SNIHostName || matcher.none { name.asciiName.matches(it) }
